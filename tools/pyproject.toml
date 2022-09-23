@@ -8,7 +8,7 @@ packages = [{include = "builder"}]
 
 [tool.poetry.scripts]
 run-build='builder.host:run_from_cmdline'
-run-build-internal='builder.container.run:run_from_cmdline'
+run-build-internal='builder.container:run_from_cmdline'
 
 [tool.poetry-dynamic-versioning]
 enable=false
@@ -16,8 +16,10 @@ vcs="git"
 metadata=true
 dirty=true
 style="semver"
-tag-branch="main"
-pattern="default"
+# this is the default dunamai (which is what poetry-dynamic-version uses under the hood)
+# semver pattern ([1]) with a tools@ prefix added
+# [1]: https://github.com/mtkennerly/dunamai/blob/master/dunamai/__init__.py
+pattern="^tools@v((?P<epoch>\\d+)!)?(?P<base>\\d+(\\.\\d+)*)([-._]?((?P<stage>[a-zA-Z]+)[-._]?(?P<revision>\\d+)?))?(\\+(?P<tagged_metadata>.+))?$"
 
 [tool.poe.tasks]
 format = 'black .'

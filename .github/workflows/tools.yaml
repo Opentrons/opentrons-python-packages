@@ -58,6 +58,7 @@ jobs:
         run: |
           docker images
           package_name=`docker images -q opentrons/python-package-builder`
+          echo "Package name is $package_name from `docker images opentrons/python-package-builder` `docker images -q opentrons/python-package-builder`"
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
           docker image tag $package_name ghcri.io/opentrons/python-package-builder:dev
           docker image push ghcr.io/opentrons/python-package-builder:dev

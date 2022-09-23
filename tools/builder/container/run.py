@@ -6,6 +6,7 @@ import io
 import subprocess
 from pathlib import Path
 from builder.common import args
+from builder import __version__
 
 
 def run_from_cmdline() -> None:
@@ -84,18 +85,24 @@ def run_build(
     verbose: bool,
 ) -> None:
     """Run the build."""
+    print(f"Building with tools version {__version__}")
     environ = activate_environment(buildroot_sdk_base, output, verbose)
     testfile = package_repo_base / "test.c"
     print(f"Building tiny little test file: {testfile.open().read()}", file=output)
-    # It appears that PATH has to be set like this every time for reasons that escape me
-    compile_args = [
-        f'PATH={environ["PATH"]}',
-        "$CC",
-        "$CFLAGS",
-        str(package_repo_base / "test.c"),
-        "-o",
-        str(package_repo_base / "test.out"),
-    ]
+    # There is some awful stuff going on with subprocess not really handling shell
+    # calls with environment specs very well. Making the call one big string works
+    # where the argslist approach does not.
+    compile_args = " ".join(
+        [
+            f'PATH={environ["PATH"]}',
+            "$CC",
+            "-v",
+            "$CFLAGS",
+            str(package_repo_base / "test.c"),
+            "-o",
+            str(package_repo_base / "test.out"),
+        ]
+    )
     if verbose:
         print(" ".join(compile_args))
     result = subprocess.run(
@@ -107,7 +114,7 @@ def run_build(
         stderr=subprocess.STDOUT,
     )
     if verbose:
-        print(result.stdout, file=output)
+        print(f"Build result: {result.stdout!r}", file=output)
     if result.returncode != 0:
         raise RuntimeError(
             f"Compile failed: {result.returncode}: {result.stdout!r}: {result.stderr!r}"

@@ -66,7 +66,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def _container_image_name() -> str:
-    return f"opentrons-python-packages-{builder.__version__}"
+    version_no_metadata = builder.__version__.split("+")[0]
+    return f"opentrons-python-packages-{version_no_metadata}"
 
 
 def _container_build_invoke_cmd(effective_uid: int, effective_gid: int) -> List[str]:
@@ -74,8 +75,6 @@ def _container_build_invoke_cmd(effective_uid: int, effective_gid: int) -> List[
     return [
         "docker",
         "build",
-        f"--build-arg=HOST_USER_ID={effective_uid}",
-        f"--build-arg=HOST_GROUP_ID={effective_gid}",
         "-f",
         os.path.join(ROOT_PATH, "Dockerfile"),
         "-t",

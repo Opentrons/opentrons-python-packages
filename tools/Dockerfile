@@ -1,10 +1,6 @@
 FROM python:3.10-slim-bullseye
 MAINTAINER Opentrons Engineering <engineering@opentrons.com>
 
-ARG HOST_USER_ID=1000
-ARG HOST_GROUP_ID=1000
-
-
 ENV BUILDENV_ROOT=/build-environment
 ENV POETRY_HOME=/build-environment/poetry
 ENV POETRY_VERSION=1.2.1
@@ -12,19 +8,10 @@ ENV PATH=$PATH:/build-environment/poetry/bin
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true
 ENV HOME=/build-environment
 
-RUN apt update && apt install -y curl wget file
-RUN mkdir -p /${POETRY_HOME}/poetry \
-    && chown -R ${HOST_USER_ID} //build-environment
+RUN apt update && apt install -y curl wget file git
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
-USER ${HOST_USER_ID}:${HOST_GROUP_ID}
-
-WORKDIR /build-environment
-
-VOLUME /build-environment/python-package-index
-
-RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN poetry self add "poetry-dynamic-versioning[plugin]"
-RUN poetry self add 'poethepoet[poetry_plugin]'
+RUN mkdir /build-environment
+ADD . /build-environment/tools
 
 # TODO: This should be a release version of the SDK, but one does not
 # exist yet.
@@ -35,8 +22,19 @@ RUN \
     && cd arm-buildroot-linux-gnueabihf_sdk-buildroot \
     && ./relocate-sdk.sh
 
-ADD . .
-RUN cd /build-environment \
-   && poetry install
+RUN mkdir -p /${POETRY_HOME}/poetry \
+    && curl -sSL https://install.python-poetry.org | python3 - \
+    && poetry self add "poetry-dynamic-versioning[plugin]" \
+    && poetry self add 'poethepoet[poetry_plugin]' \
+    && cd /build-environment/tools && rm -rf ./dist/* \
+    && poetry install \
+    && poetry build \
+    && pip install ./dist/builder-*.whl \
+    && rm -rf ${POETRY_HOME} \
+    && cp ./support/run.sh /build-environment/ \
+    && cd /build-environment && rm -rf ./tools
 
-ENTRYPOINT ["poetry", "run", "run-build-internal", "--package-repo-base=/build-environment/python-package-index", "--buildroot-sdk-base=/build-environment/arm-buildroot-linux-gnueabihf_sdk-buildroot"]
+VOLUME /build-environment/python-package-index
+WORKDIR /build-environment
+
+ENTRYPOINT ["/build-environment/run.sh", "-m", "builder.container", "--package-repo-base=/build-environment/python-package-index", "--buildroot-sdk-base=/build-environment/arm-buildroot-linux-gnueabihf_sdk-buildroot"]

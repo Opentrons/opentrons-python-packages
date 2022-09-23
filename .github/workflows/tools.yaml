@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - "tools/**/*"
-      - ".github/workflows/tools.yml"
+      - ".github/workflows/tools.yaml"
     branches:
       - "*"
     tags:

@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+"""build.py - a script for running builds in this repo
+
+This is a very small wrapper around the build tooling in tools/
+and requires python >=3.7
+"""
+
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))
+from builder.host import run_from_cmdline
+
+run_from_cmdline()

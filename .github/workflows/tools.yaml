@@ -54,14 +54,14 @@ jobs:
           ./build --prep-container-only --force-container-build --verbose
           echo "::set-output name=container::$(docker images -q opentrons/python-package-builder)"
       - name: "Deploy the container to :dev"
-        id: container-deploy
+        id: container-deploy-dev
         if: ${{!startsWith(github.ref, 'refs/tags/tools')}}
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u --password-stdin
           docker image tag ${{ steps.container-build.outputs.container-name }} ghcri.io/opentrons/python-package-builder:dev
           docker image push ghcr.io/opentrons/python-package-builder:dev
       - name: "Deploy the container to a tagged version"
-        id: container-deploy
+        id: container-deploy-versioned
         if: startsWith(github.ref, 'refs/tags/tools')
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u --password-stdin

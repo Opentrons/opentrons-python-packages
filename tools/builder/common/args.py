@@ -18,4 +18,15 @@ def add_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         action="store_true",
         help="Whether verbose output should be written",
     )
+    parser.add_argument(
+        "--prep-container-only",
+        action="store_true",
+        help="Prepare the container and exit before running the package build.",
+    )
+    parser.add_argument(
+        "--force-container-build",
+        action="store_true",
+        help="Always build the container even if one is available upstream",
+    )
+
     return parser

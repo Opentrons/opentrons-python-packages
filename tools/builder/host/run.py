@@ -15,6 +15,8 @@ ROOT_PATH = os.path.realpath(
 )
 VOLUME_PATH = os.path.realpath(os.path.join(ROOT_PATH, os.path.pardir))
 
+CONTAINER_NAME = "opentrons/python-package-builder"
+
 
 def run_from_cmdline() -> None:
     """
@@ -52,10 +54,12 @@ def run_build(
     allow_sys_exit (kw only): Allow this call to call sys.exit(). This is useful in a
                               direct command-line context and to be avoided otherwise.
     """
-    container_str = _build_container(
-        os.geteuid(), os.getegid(), parsed_args.output, allow_sys_exit
+    container_str = prep_container(
+        parsed_args.output, allow_sys_exit, parsed_args.force_container_build
     )
-    _run_build(container_str, argv[1:], parsed_args.output)
+    if parsed_args.prep_container_only:
+        return
+    build_packages(container_str, argv[1:], parsed_args.output)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -65,9 +69,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _container_image_name() -> str:
+def _container_image_specific() -> str:
     version_no_metadata = builder.__version__.split("+")[0]
-    return f"opentrons-python-packages-{version_no_metadata}"
+    return f"{CONTAINER_NAME}:{version_no_metadata}"
+
+
+def _container_image_latest() -> str:
+    return f"{CONTAINER_NAME}:latest"
 
 
 def _container_build_invoke_cmd(effective_uid: int, effective_gid: int) -> List[str]:
@@ -78,7 +86,9 @@ def _container_build_invoke_cmd(effective_uid: int, effective_gid: int) -> List[
         "-f",
         os.path.join(ROOT_PATH, "Dockerfile"),
         "-t",
-        f"{_container_image_name()}",
+        f"{_container_image_specific()}",
+        "-t",
+        f"{_container_image_latest()}",
         ROOT_PATH,
     ]
 
@@ -107,8 +117,8 @@ def _build_container(
         proc.terminate()
     if proc.returncode != 0:
         raise RuntimeError(f"Container build failed with {proc.returncode}")
-    print(f"Created container as {_container_image_name()}", file=output)
-    return _container_image_name()
+    print(f"Created container: {_container_image_specific()}", file=output)
+    return _container_image_specific()
 
 
 def _container_run_invoke_cmd(
@@ -124,7 +134,7 @@ def _container_run_invoke_cmd(
     ] + forwarded_argv
 
 
-def _run_build(
+def build_packages(
     container_str: str,
     forwarded_argv: List[str],
     output: io.TextIOBase,
@@ -150,3 +160,20 @@ def _run_build(
         proc.terminate()
     if proc.returncode != 0:
         raise RuntimeError(f"Build failed with {proc.returncode}")
+
+
+def prep_container(
+    output: io.TextIOBase, allow_sys_exit: bool, force_build: bool
+) -> str:
+    """Prepare the container for the build.
+
+    For now, this just builds the container. In the future, it might pull
+    it from a container repo instead.
+    """
+    _ = force_build
+    return build_container(output, allow_sys_exit)
+
+
+def build_container(output: io.TextIOBase, allow_sys_exit: bool) -> str:
+    """Build the docker container for the build locally."""
+    return _build_container(os.geteuid(), os.getegid(), output, allow_sys_exit)

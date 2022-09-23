@@ -2,12 +2,12 @@ on:
   # this is the workflow for verification in branches. it doesn't do deploys
   push:
     paths:
-      - tools/**/*
-      - .github/workflows/tools.yml
+      - "tools/**/*"
+      - ".github/workflows/tools.yml"
     branches:
-      - *
+      - "*"
     tags:
-      - tools@*
+      - "tools@*"
   workflow_dispatch:
 
 jobs:

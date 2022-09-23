@@ -15,7 +15,7 @@ ROOT_PATH = os.path.realpath(
 )
 VOLUME_PATH = os.path.realpath(os.path.join(ROOT_PATH, os.path.pardir))
 
-CONTAINER_NAME = "opentrons/python-package-builder"
+CONTAINER_NAME = "ghcr.io/opentrons/python-package-builder"
 
 
 def run_from_cmdline() -> None:

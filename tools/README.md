@@ -20,4 +20,8 @@ You can
 - *lint*: using `poetry poe lint`
 - *format*: using `poetry poe format`
 - *test*: using `poetry poe test`
-- *try a build*: using `poetry run builder.host.run`
+- *try a build*: using `poetry poe run-build`
+
+## Testing Build Tools
+
+The top-level `./build` script entrypoint is going to mostly try to download the latest release of the build tools docker container rather than use your local stuff. It also lives in a top level directory which is annoying to use. To test locally you can use the poetry entrypoint `poetry poe run-build`.

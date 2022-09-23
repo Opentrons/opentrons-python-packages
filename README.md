@@ -12,3 +12,14 @@ Any package identified here can be installed on an OT-2 through `pip`.
 Please open an issue if there is a Python package that you want that is not present, or if there is a specific version of a Python package that the index does not have. Please also feel free to open a pull request to add it! Before requesting a package or new version, please try installing it on an OT-2 first; only packages with native code components need to be here, since pure-python packages are installable from PyPI.
 
 Be aware that the OT-2 system can't always handle the addition of a specific package. For instance, the package might be a thin wrapper around a system library that is not available on the OT-2; or it might have a toolchain that does not allow cross-compilation with the tools we have available.
+
+## Building, and Dependencies To Build
+
+This repo is intended to work in production on github CI, but you can test builds locally (and should, since some packages can have surprising build system requirements). The entry point for building is `./build`. It's a python script that should work on anything above python 3.7. You can get usage by running `./build --help`.
+
+You'll also need to have Docker installed and running and accessible with how you call `./build` (i.e., if you don't want to use `sudo` then the docker socket should be user-accessible).
+
+## Build Tools
+
+The build tools are a separate package that is developed in this repo in `./tools` - see that directory for more.
+

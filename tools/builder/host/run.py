@@ -151,7 +151,3 @@ def _run_build(
         proc.terminate()
     if proc.returncode != 0:
         raise RuntimeError(f"Build failed with {proc.returncode}")
-
-
-if __name__ == "__main__":
-    run_from_cmdline()

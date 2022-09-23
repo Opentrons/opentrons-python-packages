@@ -118,7 +118,3 @@ def run_build(
     result = subprocess.run(check_args, check=True, capture_output=True)
     print(result.stdout, file=output)
     assert b"ARM" in result.stdout
-
-
-if __name__ == "__main__":
-    run_from_cmdline()

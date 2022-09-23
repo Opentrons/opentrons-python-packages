@@ -10,6 +10,27 @@ You don't need to install these to _use_ the tooling - docker takes care of that
 
 You do need to install docker for your preferred platform.
 
+## Setting up to develop the build tools
+
+Install poetry:
+
+``` shell
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+Install required plugins:
+
+``` shell
+          poetry self add "poetry-dynamic-versioning[plugin]"
+          poetry self add "poethepoet[poetry_plugin]"
+```
+
+Set up the local environment:
+
+``` shell
+poetry install
+```
+
 ## Using Poetry
 
 Because we use poe, we can get away without having a wrapping makefile for dev tasks.

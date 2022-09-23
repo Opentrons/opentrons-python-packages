@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "builder"
-version = "0.0.0-post.4+e6854d9.dirty"
+version = "0.0.1+992e55e.dirty"
 description = "Builder for the opentrons python package index"
 authors = ["Opentrons Engineering <engineering@opentrons.com>"]
 readme = "README.md"

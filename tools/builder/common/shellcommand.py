@@ -29,8 +29,8 @@ def run_simple(
     )
     if not proc.stdout:
         raise RuntimeError(f"failed to communicate with {name} process")
+    accumulated = b""
     try:
-        accumulated = b""
         while proc.poll() is None:
             # always read to prevent blocking on the pipe
             procwrote = proc.stdout.read()
@@ -44,5 +44,7 @@ def run_simple(
     except KeyboardInterrupt:
         proc.terminate()
     if proc.returncode != 0:
-        raise RuntimeError(f"{name} failed with {proc.returncode}: {proc.stdout}")
+        raise RuntimeError(
+            f"{name} failed with {proc.returncode}: {accumulated.decode()}"
+        )
     return accumulated.decode()

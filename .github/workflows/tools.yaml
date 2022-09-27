@@ -54,7 +54,7 @@ jobs:
           ./build --prep-container-only --force-container-build
       - name: "Deploy the container to :main"
         id: container-deploy-main
-        if: ${{equals(github.ref, 'refs/heads/main')}}
+        if: ${{github.ref == 'refs/heads/main'}}
         run: |
           docker images
           package_name=`docker images -q ghcr.io/opentrons/python-package-builder:latest`
@@ -63,7 +63,7 @@ jobs:
           docker image push ghcr.io/opentrons/python-package-builder:main
       - name: "Deploy the container to :dev"
         id: container-deploy-dev
-        if: ${{startsWith(github.ref, 'refs/heads/') && !equals(github.ref, 'refs/heads/main')}}
+        if: ${{startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main')}}
         run: |
           docker images
           package_name=`docker images -q ghcr.io/opentrons/python-package-builder:latest`

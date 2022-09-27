@@ -47,10 +47,24 @@ def run_build(argv: List[str], parsed_args: argparse.Namespace) -> None:
                  happen outside this function since if -h/--help is in the args, argparse
                  "helpfully" prints help and exits.
     """
+    if parsed_args.container_source == "any":
+        force_container_build = False
+        require_tag = False
+    elif parsed_args.container_source == "build":
+        force_container_build = True
+        require_tag = False
+    elif parsed_args.container_source == "pull":
+        force_container_build = False
+        require_tag = True
+    else:
+        raise RuntimeError("update handling of container source arg")
     container_str = prep_container(
         ROOT_PATH,
-        parsed_args.force_container_build,
         parsed_args.output,
+        pull_tag=parsed_args.container_tag,
+        force_build=force_container_build,
+        require_tag=require_tag,
+        verbose=parsed_args.verbose,
     )
     if parsed_args.prep_container_only:
         return

@@ -19,14 +19,27 @@ def add_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         help="Whether verbose output should be written",
     )
     parser.add_argument(
+        "--container-tag",
+        action="store",
+        default="main",
+        help="Container tag to pull. default: main",
+    )
+    parser.add_argument(
+        "--container-source",
+        action="store",
+        choices=["build", "pull", "any"],
+        default="any",
+        help=(
+            "How to get the build container. build: do not attempt "
+            "to pull, but build locally. pull: always pull, and fail "
+            "if the tag cannot be pulled. any: try to pull, but build "
+            "if the pull fails. default: any"
+        ),
+    )
+    parser.add_argument(
         "--prep-container-only",
         action="store_true",
         help="Prepare the container and exit before running the package build.",
-    )
-    parser.add_argument(
-        "--force-container-build",
-        action="store_true",
-        help="Always build the container even if one is available upstream",
     )
 
     return parser

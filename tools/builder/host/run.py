@@ -68,7 +68,9 @@ def run_build(argv: List[str], parsed_args: argparse.Namespace) -> None:
     )
     if parsed_args.prep_container_only:
         return
-    run_container(container_str, argv[1:], ROOT_PATH, parsed_args.output)
+    run_container(
+        container_str, argv[1:], ROOT_PATH, parsed_args.output, parsed_args.verbose
+    )
 
 
 def build_arg_parser() -> argparse.ArgumentParser:

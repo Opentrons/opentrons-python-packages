@@ -5,19 +5,21 @@ import io
 import time
 from typing import List, Optional
 
+
 def run_simple(
-        args: List[str],
-        name: str,
-        output: io.StringIO,
-        cwd: Optional[str] = None,
-        verbose: bool = False) -> str:
+    args: List[str],
+    name: str,
+    output: io.TextIOBase,
+    cwd: Optional[str] = None,
+    verbose: bool = False,
+) -> str:
     """Run a shell command simple enough to run with the list-args subprocess Popen.
 
     Should stream the output of the process to output. Raises RuntimeError if the
     process fails, and cancels the process and propagates KeyboardInterrupt.
     """
     if verbose:
-        print(' '.join(args), file=output)
+        print(" ".join(args), file=output)
     proc = subprocess.Popen(
         args,
         bufsize=100,
@@ -28,12 +30,14 @@ def run_simple(
     if not proc.stdout:
         raise RuntimeError(f"failed to communicate with {name} process")
     try:
+        accumulated = b""
         while proc.poll() is None:
             # always read to prevent blocking on the pipe
-            procwrote = proc.stdout.read().decode()
+            procwrote = proc.stdout.read()
+            accumulated += procwrote
             # but only echo if verbose
             if verbose:
-                output.write(procwrote)
+                output.write(procwrote.decode())
                 output.flush()
             else:
                 time.sleep(0.1)
@@ -41,4 +45,4 @@ def run_simple(
         proc.terminate()
     if proc.returncode != 0:
         raise RuntimeError(f"{name} failed with {proc.returncode}: {proc.stdout}")
-    return proc.stdout
+    return accumulated.decode()

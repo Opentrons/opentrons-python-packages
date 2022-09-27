@@ -8,6 +8,7 @@ import builder
 from builder.common.shellcommand import run_simple
 
 CONTAINER_NAME = "ghcr.io/opentrons/python-package-builder"
+DEFAULT_TAG = "main"
 
 
 def run_container(
@@ -15,6 +16,7 @@ def run_container(
     forwarded_argv: List[str],
     root_path: str,
     output: io.TextIOBase,
+    verbose: bool = False,
 ) -> None:
     """Run the container with a forwarded argv.
 
@@ -27,10 +29,12 @@ def run_container(
     print("Running build", file=output)
     run_simple(
         _container_run_invoke_cmd(container_str, forwarded_argv, root_path),
-        name='container build',
+        name="container build",
         output=output,
-        verbose=verbose)
-    print('Build complete', file=output)
+        verbose=verbose,
+    )
+    print("Build complete", file=output)
+
 
 def prep_container(
     root_path: str,
@@ -56,14 +60,18 @@ def prep_container(
     force_build: if True, always build the container even if one is available
                  to pull
     """
+    if pull_tag is None:
+        tag = DEFAULT_TAG
+    else:
+        tag = pull_tag
     if not force_build:
         try:
-            return pull_container(pull_tag, output, verbose=verbose)
+            return pull_container(tag, output, verbose=verbose)
         except RuntimeError:
-            output.write(f"Failed to pull {pull_tag}")
+            output.write(f"Failed to pull {tag}")
             pass
     if require_tag:
-        raise RuntimeError(f"Could not pull {pull_tag}")
+        raise RuntimeError(f"Could not pull {tag}")
     return build_container(root_path, output, verbose=verbose)
 
 
@@ -81,7 +89,7 @@ def pull_container(tag: str, output: io.TextIOBase, verbose: bool = False) -> st
     container_name = f"{CONTAINER_NAME}:{tag}"
     print(f"Attempting to pull {container_name}", file=output)
     pull_cmd = ["docker", "pull", container_name]
-    run_simple(pull_cmd, name='pull', output=output, verbose=verbose)
+    run_simple(pull_cmd, name="pull", output=output, verbose=verbose)
 
     ls_result = subprocess.run(
         ["docker", "images", "-q", container_name], capture_output=True, check=True
@@ -107,7 +115,9 @@ def build_container(
     output: file stream to send logs to
 
     """
-    return _build_container(os.geteuid(), os.getegid(), root_path, output, verbose=verbose)
+    return _build_container(
+        os.geteuid(), os.getegid(), root_path, output, verbose=verbose
+    )
 
 
 def _container_image_specific() -> str:
@@ -146,7 +156,13 @@ def _build_container(
     """Build the docker container and return a keyword usable to run it."""
     print("Creating container", file=output)
     invoke_str = _container_build_invoke_cmd(effective_uid, effective_gid, root_path)
-    run_simple(invoke_str, name='build container', output=output, cwd=root_path, verbose=verbose)
+    run_simple(
+        invoke_str,
+        name="build container",
+        output=output,
+        cwd=root_path,
+        verbose=verbose,
+    )
     print(f"Created container: {_container_image_specific()}", file=output)
     return _container_image_specific()
 

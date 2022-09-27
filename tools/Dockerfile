@@ -11,7 +11,7 @@ ENV HOME=/build-environment
 RUN apt update && apt install -y curl wget file git
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 RUN mkdir /build-environment
-ADD . /build-environment/tools
+COPY support/run.sh /build-environment/
 
 # TODO: This should be a release version of the SDK, but one does not
 # exist yet.
@@ -25,14 +25,18 @@ RUN \
 RUN mkdir -p /${POETRY_HOME}/poetry \
     && curl -sSL https://install.python-poetry.org | python3 - \
     && poetry self add "poetry-dynamic-versioning[plugin]" \
-    && poetry self add 'poethepoet[poetry_plugin]' \
-    && cd /build-environment/tools && rm -rf ./dist/* \
+    && poetry self add 'poethepoet[poetry_plugin]'
+
+COPY README.md pyproject.toml poetry.lock /build-environment/tools/
+COPY builder /build-environment/tools/builder/
+
+RUN \
+    cd /build-environment/tools \
     && poetry install \
     && poetry build \
-    && pip install ./dist/builder-*.whl \
-    && rm -rf ${POETRY_HOME} \
-    && cp ./support/run.sh /build-environment/ \
-    && cd /build-environment && rm -rf ./tools
+    && pip install ./dist/builder-*.whl
+
+RUN   cd /build-environment && rm -rf ./tools && rm -rf ${POETRY_HOME}
 
 VOLUME /build-environment/python-package-index
 WORKDIR /build-environment

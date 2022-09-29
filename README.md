@@ -19,6 +19,17 @@ This repo is intended to work in production on github CI, but you can test build
 
 You'll also need to have Docker installed and running and accessible with how you call `./build` (i.e., if you don't want to use `sudo` then the docker socket should be user-accessible).
 
+### Machine Compatibility for Building
+
+This is tested and maintained for x64 docker. It should work if you run it from
+- An x86_64 linux host
+  - Including WSL
+- An x86_64 OSX host
+
+It might work on a native Windows x86_64 host.
+
+It definitely will not work on any machine architecture that presents the docker container with an arm64 environment (e.g. M1/M2 macs, phones, embedded devices). The buildroot SDK that powers the package builds needs to run in an x86_64 architecture. If that's all you have, you'll have to run it in a cross-architecture vm.
+
 ## Build Tools
 
 The build tools are a separate package that is developed in this repo in `./tools` - see that directory for more.

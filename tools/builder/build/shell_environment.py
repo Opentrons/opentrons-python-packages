@@ -88,6 +88,13 @@ class SDKSubshell:
         return '\n'.join(self._guarded_shellcall(shlex.join(cmd)))
 
     def initiate_python_environment(self, sdk_path: Path):
+        """
+        Prepare the shell environment for building python.
+
+        This _must_ be called _before_ you try and build packages and _after_
+        any python-side prep (activating venvs, installing dependencies) because
+        it messes with extremely core python behavior in the shell.
+        """
         sysroot = sdk_path / 'arm-buildroot-linux-gnueabihf' / 'sysroot'
         sysconfigdata_name = '_sysconfigdata__linux_arm-linux-gnueabihf'
         pythonpath = (

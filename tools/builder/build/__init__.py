@@ -10,14 +10,22 @@ from .types import GithubDevSource, GithubReleaseSDistSource
 from .orchestrate import build_package
 
 @overload
-def github_source(org: str, repo: str, tag: str, sdist_archive: str) -> GithubReleaseSDistSource:
+def github_source(*, org: str, repo: str, tag: str, sdist_archive: str,
+                  name: str | None = None,) -> GithubReleaseSDistSource:
     pass
 
 @overload
-def github_source(org: str, repo: str, tag: str, path: str | None = None) -> GithubDevSource:
+def github_source(*, org: str, repo: str, tag: str, name: str | None = None, path: str | None = None) -> GithubDevSource:
     pass
 
-def github_source(org, repo, tag, sdist_archive = None, path = None):
+def github_source(
+        *,
+        org: str,
+        repo: str,
+        tag: str,
+        sdist_archive: str | None = None,
+        name: str | None = None,
+        path: str | None = None) -> GithubDevSource | GithubReleaseSDistSource:
     """
     Tell the system this package is fetched from github.
 
@@ -34,9 +42,11 @@ def github_source(org, repo, tag, sdist_archive = None, path = None):
                          subdirectory of this repo that has the actual code. the path
                          should be the directory containing the package metadata - the
                          pyproject.toml or setup.py or whatever.
+    name: Optional str - a name for the source. If not specified, repo is used.
     """
+    sourcename = name or repo
     if sdist_archive:
-        return GithubReleaseSDistSource(org=org, repo=repo, tag=tag, package_name=sdist_archive)
-    return GithubDevSource(org=org, repo=repo, tag=tag, package_source_path=path)
+        return GithubReleaseSDistSource(name=sourcename, org=org, repo=repo, tag=tag, package_name=sdist_archive)
+    return GithubDevSource(name=sourcename, org=org, repo=repo, tag=tag, package_source_path=path)
 
 __all__ = ['github_source', 'build_package']

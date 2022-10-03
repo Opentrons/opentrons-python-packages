@@ -3,10 +3,11 @@ builder.container.run: run the build inside a container
 """
 import argparse
 import io
-import subprocess
 from pathlib import Path
 from builder.common import args
 from builder import __version__
+from builder.build.orchestrate import discover_build_packages_sync
+from builder.build.types import GlobalBuildContext
 
 
 def run_from_cmdline() -> None:
@@ -28,100 +29,50 @@ def run_from_cmdline() -> None:
     )
     parser = args.add_common_args(parser)
     parsed_args = parser.parse_args()
+    repo_base = Path(parsed_args.package_repo_base)
+
     run_build(
-        Path(parsed_args.package_repo_base),
+        Path(parsed_args.package_repo_base) / "packages",
         Path(parsed_args.buildroot_sdk_base),
+        _ensure_path(repo_base, Path(parsed_args.build_tree_root)),
+        _ensure_path(repo_base, Path(parsed_args.dist_tree_root)),
         parsed_args.output,
         parsed_args.verbose,
     )
 
 
-def _envmap_from_printenv(printenv_result: str) -> dict[str, str]:
-    printenv_lines = iter(printenv_result.split("\n"))
-    while next(printenv_lines).strip() != "__OT_OUTPUT__":
-        continue
-    environ_map: dict[str, str] = {}
-    for line in printenv_lines:
-        thisline = line.strip()
-        if not thisline:
-            continue
-        lineparts = thisline.split("=")
-        environ_map[lineparts[0]] = "=".join(lineparts[1:])
-    return environ_map
-
-
-def activate_environment(
-    buildroot_sdk_base: Path, output: io.TextIOBase, verbose: bool
-) -> dict[str, str]:
-    print("Capturing buildroot SDK environment", file=output)
-    cmd = [
-        "/bin/bash",
-        "-c",
-        f'. {str(buildroot_sdk_base / "environment-setup")} && echo __OT_OUTPUT__ && printenv',
-    ]
-    if verbose:
-        print(" ".join(cmd), file=output)
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"Buildroot SDK environment activation failed: {result.returncode}: {result.stderr} {result.stdout}"
-        )
-    if verbose:
-        print(result.stdout, file=output)
-    environ_map = _envmap_from_printenv(result.stdout)
-    if verbose:
-        print(f"Harvested buildroot SDK environ vars: {environ_map}", file=output)
-    return environ_map
+def _ensure_path(repo_base: Path, possibly_relative: Path) -> Path:
+    if possibly_relative.is_absolute():
+        return possibly_relative
+    return (repo_base / possibly_relative).resolve()
 
 
 def run_build(
-    package_repo_base: Path,
+    package_tree_root: Path,
     buildroot_sdk_base: Path,
+    build_tree_root: Path,
+    dist_tree_root: Path,
     output: io.TextIOBase,
     verbose: bool,
 ) -> None:
-    """Run the build."""
+    """Run the build.
+
+    Params
+    ------
+
+    package_tree_root: path to the tree of packages, each containing a build.py
+    buildroot_sdk_base: path to the unzipped location of the buildroot sdk, containing
+                        setup_environment
+    build_tree_root: path to the tree of build directories
+    dist_tree_root: path to the tree where distributables should go
+    output: a text io that can be used to write build logs
+    verbose: whether those logs should be verbose
+    """
     print(f"Building with tools version {__version__}")
-    environ = activate_environment(buildroot_sdk_base, output, verbose)
-    testfile = package_repo_base / "test.c"
-    print(f"Building tiny little test file: {testfile.open().read()}", file=output)
-    # There is some awful stuff going on with subprocess not really handling shell
-    # calls with environment specs very well. Making the call one big string works
-    # where the argslist approach does not.
-    compile_args = " ".join(
-        [
-            f'PATH={environ["PATH"]}',
-            "$CC",
-            "-v",
-            "$CFLAGS",
-            str(package_repo_base / "test.c"),
-            "-o",
-            str(package_repo_base / "test.out"),
-        ]
+    context = GlobalBuildContext(
+        output=output, verbose=verbose, sdk_path=buildroot_sdk_base
     )
-    if verbose:
-        print(" ".join(compile_args))
-    result = subprocess.run(
-        compile_args,
-        cwd=str(package_repo_base),
-        shell=True,
-        env=environ,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+
+    discover_build_packages_sync(
+        package_tree_root, build_tree_root, dist_tree_root, context=context
     )
-    if verbose:
-        print(f"Build result: {result.stdout!r}", file=output)
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"Compile failed: {result.returncode}: {result.stdout!r}: {result.stderr!r}"
-        )
-    check_args = ["file", str(package_repo_base / "test.out")]
-    if verbose:
-        print(" ".join(check_args))
-    result = subprocess.run(check_args, check=True, capture_output=True)
-    print(result.stdout, file=output)
-    assert b"ARM" in result.stdout

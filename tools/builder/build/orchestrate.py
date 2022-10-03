@@ -1,14 +1,88 @@
-from .types import GithubDevSource, GithubReleaseSDistSource
+from .types import GithubDevSource, GithubReleaseSDistSource, GlobalBuildContext, PackageBuildContext, BuildPaths
 from .download import fetch_source, unpack_source
 from .build_wheel import build_with_setup_py
-import sys
-import os
+from typing import Iterator
 
+from pathlib import Path
+
+def discover_build_packages_sync(
+        package_root: Path,
+        build_root: Path,
+        dist_root: Path,
+        *,
+        context: GlobalBuildContext) -> None:
+    for _ in discover_build_packages(
+            package_root, build_root, dist_root, context=context):
+        pass
+
+def discover_build_packages(
+        package_root: Path,
+        build_root: Path,
+        dist_root: Path,
+        *,
+        context: GlobalBuildContext) -> Iterator[None]:
+    context.write('Building all packages')
+    yield from build_packages(
+        discover_packages(
+            package_root, build_root, dist_root,
+            context=context),
+        context=context)
+
+def discover_packages(
+        package_root: Path,
+        build_root: Path,
+        dist_root: Path,
+        *,
+        context: GlobalBuildContext) -> Iterator[BuildPaths]:
+    """
+    Discover package sources and build a list of directories for
+    the build.
+
+    Params
+    ------
+    package_root: path to a directory containing package source specs
+    build_root: path to a directory where packages should be built
+    dist_root: path to a directory where package distributions should go
+    """
+    resolved_root = package_root.resolve()
+    builds = [path.parent for path in resolved_root.rglob('build.py')]
+    context.write('Discovering packages')
+    for build in builds:
+        build_path = (build_root / (build.relative_to(resolved_root)) / '')
+        dist_path = (dist_root / (build.relative_to(resolved_root)) / '')
+        paths = BuildPaths(
+            source_path=build,
+            build_path=build_path,
+            dist_path=dist_path)
+        context.write_verbose(
+            f'Discovered package at {build}, building in {build_path}, dist to {dist_path}')
+        yield paths
+
+def build_packages(
+        packages: Iterator[BuildPaths],
+        *,
+        context: GlobalBuildContext) -> Iterator[None]:
+    for package in packages:
+        discover_build_package(package, context=context)
+        yield
+
+def discover_build_package(
+        package: BuildPaths,
+        *,
+        context: GlobalBuildContext) -> None:
+    context.write(f'Building package in directory {package.source_path}')
+    package_context = PackageBuildContext(paths=package, context=context)
+    package_build_file = package.source_path / 'build.py'
+    build_obj = compile(package_build_file.open().read(), package_build_file,'exec')
+    injected_globals = globals()
+    injected_globals['opentrons_package_build_context'] = package_context
+    exec(build_obj, injected_globals)
+
+# This function is called by the exec'd build_package call in build.py
+# package build files. It relies on having the build paths in the globals.
 def build_package(
         source: GithubDevSource | GithubReleaseSDistSource,
-        setup_py_command: str,
-        /,
-        work_path: str | None,
+        setup_py_command: str | None = None,
         ) -> str:
     """
     Build a package. The main entry point for package builds.
@@ -21,35 +95,39 @@ def build_package(
                unpack, and build results will be made automatically inside it.
                If None, automatically detect from the path in which python
                was run.
-    setup_py_command: The command to use with setup.py to build the package.
+    setup_py_command: The command to use with setup.py to build the package. If
+                      not specified, build_wheel.
 
     Returns
     -------
     The path to the built wheel.
     """
-    work = _work_dir(work_path)
-    download_dir = os.path.join(work, 'download')
-    build_dir = os.path.join(work, 'build')
-    unpack_dir = os.path.join(work, 'unpack')
+    global opentrons_package_build_context
+    # this is injected as a global because this function gets called from an exec'd file
+    context: PackageBuildContext = opentrons_package_build_context # type: ignore[name-defined]
+    context.context.write_verbose(f'building package {source.name}:\n'
+                                  f'{context.prettyprint()}\n'
+                                  f'{source.prettyprint()}')
+    context.paths.build_path.mkdir(parents=True, exist_ok=True)
+    context.paths.dist_path.mkdir(parents=True, exist_ok=True)
+
+    download_dir = context.paths.build_path / 'download/'
+    build_dir = context.paths.build_path / 'build/'
+    unpack_dir = context.paths.build_path / 'unpack/'
+
+    command = setup_py_command or 'build_wheel'
+
     for dirname in (download_dir, build_dir, unpack_dir):
-        os.makedirs(dirname, exist_ok=True)
-    fetched = fetch_source(source, download_dir)
+        dirname.mkdir(exist_ok=True)
+
+    fetched = fetch_source(source, download_dir, context=context.context)
+    context.context.write(f'Fetched to {fetched}')
     unpacked = unpack_source(
         unpack_dir,
-        os.path.join(download_dir, source.archive_name()),
-        getattr(source, 'package_source_path', '.'))
-    wheelfile = build_with_setup_py(setup_py_command, unpack_dir, build_dir)
+        download_dir / source.archive_name(),
+        getattr(source, 'package_source_path') or Path('.'),
+        context=context.context)
+    context.context.write(f'Unpacked to {str(unpacked)}')
+    wheelfile = build_with_setup_py(command, unpacked, build_dir, context.paths.dist_path,
+                                    context=context.context)
     return wheelfile
-
-def _work_dir(path_opt: str | None) -> str:
-    if path_opt is None:
-        try:
-            # if we have a __main__ module, this is a non-interactive
-            # session and we can use whatever that path is; this supports
-            # when someone runs python build.py in a package directory
-            return os.path.dir(sys.modules['__main__'].__file__)
-        except (KeyError, AttributeError):
-            # if we can't figure that out, just use the interpreter's
-            # working directory
-            return os.cwd()
-    return path_opt

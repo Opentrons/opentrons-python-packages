@@ -41,5 +41,17 @@ def add_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         action="store_true",
         help="Prepare the container and exit before running the package build.",
     )
+    parser.add_argument(
+        "--dist-tree-root",
+        action="store",
+        default="./dist",
+        help="Location for the tree of package distributables",
+    )
+    parser.add_argument(
+        "--build-tree-root",
+        action="store",
+        default="./build",
+        help="Location for the tree of package build areas",
+    )
 
     return parser

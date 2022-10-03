@@ -2,7 +2,7 @@
 from .shell_environment import SDKSubshell
 from pathlib import Path
 from .types import GlobalBuildContext
-import sys
+import re
 
 def args_for_build_ext(
         source_dir: Path,
@@ -22,7 +22,7 @@ def args_for_bdist_wheel(
     return [f'--dist-dir={str(dist_dir)}', f'--bdist-dir={str(build_dir)}', '--plat-name=linux_arm-linux-gnueabihf']
 
 def args_for_command(
-        command: list[str],
+        command: str,
         source_dir: Path,
         build_dir: Path,
         dist_dir: Path) -> list[str]:
@@ -35,7 +35,7 @@ def args_for_command(
             return args_for_bdist_wheel(source_dir, build_dir, dist_dir)
         case _:
             return []
-    return args
+    return []
 
 
 def build_with_setup_py(
@@ -62,6 +62,12 @@ def build_with_setup_py(
                      '/usr/local/lib/python3.10/lib-dynload']
         shell.run([f'PYTHONPATH={":".join(own_paths)}', 'python', '-m', 'pip', 'install'] + build_dependencies + ['wheel'])
         shell.initiate_python_environment(context.sdk_path)
+        output = ''
         for command in commands:
-            shell.run(
+            output += shell.run(
                 ['python', 'setup.py', command] + args_for_command(command, source_dir, build_dir, dist_dir))
+        wheelname = re.search(r'^creating.*([\w-\.]\.whl).*$', output, re.MULTILINE)
+        if not wheelname:
+            context.write('Build failed: could not find wheelname')
+            raise RuntimeError()
+        return wheelname.group(1)

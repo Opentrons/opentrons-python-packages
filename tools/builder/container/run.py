@@ -47,9 +47,12 @@ def run_from_cmdline() -> None:
         # we already printed all the output as it happened; if we're not, then
         # we should make sure the user can see it.
         if not parsed_args.verbose:
-            print(f"{scf.message}: {scf.returncode}: {''.join(scf.output)}", file=parsed_args.output)
+            print(
+                f"{scf.message}: {scf.returncode}: {''.join(scf.output)}",
+                file=parsed_args.output,
+            )
         else:
-            print(f'{scf.message}: {scf.returncode}', file=parsed_args.output)
+            print(f"{scf.message}: {scf.returncode}", file=parsed_args.output)
         sys.exit(1)
     except Exception as exc:
         if parsed_args.verbose:
@@ -60,6 +63,7 @@ def run_from_cmdline() -> None:
             print(f"Build failed: {str(exc)}", file=parsed_args.output)
         sys.exit(2)
     sys.exit(0)
+
 
 def _ensure_path(repo_base: Path, possibly_relative: Path) -> Path:
     if possibly_relative.is_absolute():

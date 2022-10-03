@@ -100,7 +100,7 @@ def _unpack_tar_to(
         archive: Path,
         from_archive_path: Path,
         *,
-        context: GlobalBuildContext) -> list[Path]:
+        context: GlobalBuildContext) -> Path:
     context.write(f'Untarring {archive} to {path}')
     with tarfile.open(archive, 'r') as tf:
         members = sorted(tf.getmembers(), key=lambda m: m.name, reverse=True)
@@ -115,7 +115,7 @@ def _unpack_zip_to(
         archive: Path,
         from_archive_path: Path,
         *,
-        context: GlobalBuildContext) -> list[Path]:
+        context: GlobalBuildContext) -> Path:
     context.write(f'Unzipping {archive} to {path}')
     unzipped: list[Path] = []
     with zipfile.ZipFile(archive) as zf:

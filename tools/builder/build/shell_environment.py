@@ -4,11 +4,10 @@ from pathlib import Path
 from contextlib import contextmanager
 from io import TextIOBase
 from dataclasses import dataclass
-from typing import Callable, TypeVar, Type, Iterator
+from typing import Callable, TypeVar, Type, Iterator, cast
 import shlex
 import re
 import time
-import sys
 from functools import wraps
 from builder.common.shellcommand import ShellCommandFailed
 
@@ -87,7 +86,7 @@ class SDKSubshell:
     def run(self, cmd: list[str]) -> str:
         return '\n'.join(self._guarded_shellcall(shlex.join(cmd)))
 
-    def initiate_python_environment(self, sdk_path: Path):
+    def initiate_python_environment(self, sdk_path: Path) -> None:
         """
         Prepare the shell environment for building python.
 
@@ -103,14 +102,14 @@ class SDKSubshell:
             / 'lib'
             / 'python3.10'
         )
-        self._guarded_shellcall(f'export _PYTHON_HOST_PLATFORM=linux-x86_64-linux-gnu')
+        self._guarded_shellcall('export _PYTHON_HOST_PLATFORM=linux-x86_64-linux-gnu')
         self._guarded_shellcall(f'export _PYTHON_SYSCONFIGDATA_NAME={sysconfigdata_name}')
         self._guarded_shellcall(f'export PYTHONPATH={pythonpath}')
-        self._guarded_shellcall(f'export SETUPTOOLS_USE_DISTUTILS=stdlib')
+        self._guarded_shellcall('export SETUPTOOLS_USE_DISTUTILS=stdlib')
         self._guarded_shellcall(f'export _python_sysroot={sysroot}')
-        self._guarded_shellcall(f'export _python_prefix=/usr')
-        self._guarded_shellcall(f'export _python_exec_prefix=/usr')
-        self._guarded_shellcall(f'export PYTHONNOUSERSITE=1')
+        self._guarded_shellcall('export _python_prefix=/usr')
+        self._guarded_shellcall('export _python_exec_prefix=/usr')
+        self._guarded_shellcall('export PYTHONNOUSERSITE=1')
 
     def _shellcall(self, cmd: str, handles: _SubshellHandles,
                    *, command_echo_is_verbose: bool = False) -> tuple[int, list[str]]:
@@ -170,5 +169,5 @@ class SDKSubshell:
         if self._proc.poll() is not None:
             raise RuntimeError('Subshell closed')
         yield _SubshellHandles(
-            stdin=self._proc.stdin,
-            stdout=self._proc.stdout)
+            stdin=cast(TextIOBase, self._proc.stdin),
+            stdout=cast(TextIOBase, self._proc.stdout))

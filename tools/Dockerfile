@@ -11,7 +11,6 @@ ENV HOME=/build-environment
 RUN apt update && apt install -y curl wget file git
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 RUN mkdir /build-environment
-COPY support/run.sh /build-environment/
 
 # TODO: This should be a release version of the SDK, but one does not
 # exist yet.
@@ -20,7 +19,8 @@ RUN \
     && wget https://opentrons-buildroot-ci.s3.amazonaws.com/439bccec-fff5-4501-9074-f463408da59a/opentrons-buildroot/arm-buildroot-linux-gnueabihf_sdk-buildroot.tar.gz \
     && tar xf ./arm-buildroot-linux-gnueabihf_sdk-buildroot.tar.gz \
     && cd arm-buildroot-linux-gnueabihf_sdk-buildroot \
-    && ./relocate-sdk.sh
+    && ./relocate-sdk.sh \
+    && chmod -R -c a+rwx .
 
 RUN mkdir -p /${POETRY_HOME}/poetry \
     && curl -sSL https://install.python-poetry.org | python3 - \
@@ -32,12 +32,12 @@ COPY builder /build-environment/tools/builder/
 
 RUN \
     cd /build-environment/tools \
-    && poetry install \
+    && poetry install --sync --without=dev  \
     && poetry build \
     && pip install ./dist/builder-*.whl
 
-RUN   cd /build-environment && rm -rf ./tools && rm -rf ${POETRY_HOME}
-
+RUN  cd /build-environment && rm -rf ./tools && rm -rf ${POETRY_HOME}
+COPY support/run.sh /build-environment/
 VOLUME /build-environment/python-package-index
 WORKDIR /build-environment
 

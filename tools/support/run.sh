@@ -26,22 +26,22 @@ uid=`stat -c %u /build-environment/python-package-index/README.md`
 
 # does root - our current user - own them?
 if [[ "$uid" -ne "0" ]] ; then
+    echo 'Changing ownership of SDK files'
     # a non-root user owns these files. let's make ourselves a user. we'll use the same
     # UID and GID so everything stays consistent with the host. we can give the
     # user whatever name we want.
     groupadd -g $gid builder
     useradd -l -u $uid -g builder builder
-    # we do have to chown everything to make the OS aware that we own it, but it won't
-    # affect the host since the UID and GID won't change
-    chown -R $uid:$gid /build-environment/arm-buildroot-linux-gnueabihf_sdk-buildroot
-    # when we run our command, we'll need to do it as the new user
     preamble="runuser -u builder --"
+    echo 'Ownership changed, will run as builder'
 else
     # if this is on a mac host or a linux host that is running in a root-owned directory
     # for some reason (never do this) then root owns them, and we don't really need to
     # do anything special
     preamble=""
+    echo 'No ownership changes necessary'
 fi
 # use exec here because this script is the container entrypoint (PID1) and we need to
 # keep PID1 running for the container to keep running
+echo 'Executing build'
 exec ${preamble} /usr/bin/env python3 $@

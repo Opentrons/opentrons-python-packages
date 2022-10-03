@@ -15,9 +15,9 @@ Be aware that the OT-2 system can't always handle the addition of a specific pac
 
 ## Building, and Dependencies To Build
 
-This repo is intended to work in production on github CI, but you can test builds locally (and should, since some packages can have surprising build system requirements). The entry point for building is `./build`. It's a python script that should work on anything above python 3.7. You can get usage by running `./build --help`.
+This repo is intended to work in production on github CI, but you can test builds locally (and should, since some packages can have surprising build system requirements). The entry point for building is `./build-packages`. It's a python script that should work on anything above python 3.7. You can get usage by running `./build-packages --help`.
 
-You'll also need to have Docker installed and running and accessible with how you call `./build` (i.e., if you don't want to use `sudo` then the docker socket should be user-accessible).
+You'll also need to have Docker installed and running and accessible with how you call `./build-packages` (i.e., if you don't want to use `sudo` then the docker socket should be user-accessible).
 
 ### Machine Compatibility for Building
 

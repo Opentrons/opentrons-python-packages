@@ -8,6 +8,7 @@ from typing import Callable, TypeVar, Type, Iterator
 import shlex
 import re
 import time
+from builder.common.shellcommand import ShellCommandFailed
 
 _SubshellType = TypeVar('_SubshellType', bound='SDKSubshell')
 EchoFunc = Callable[[str], None]
@@ -106,8 +107,8 @@ class SDKSubshell:
         with self._guard() as handles:
             result, stdout = self._shellcall(cmd, handles, command_echo_is_verbose=command_echo_is_verbose)
             if result != 0:
-                stdout_log = '\n'.join(stdout[:-1])
-                raise RuntimeError(f'{cmd}: {result}: {stdout_log}')
+                stdout_log = ''.join(stdout[:-1])
+                raise ShellCommandFailed(command=cmd, returncode=result, message='command failed', output=stdout_log)
             return stdout
 
     def _initiate_sdk(self, sdk_path: Path) -> None:

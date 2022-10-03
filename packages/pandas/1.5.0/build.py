@@ -5,5 +5,6 @@ build.build_package(
         org='pandas-dev',
         repo='pandas',
         tag='v1.5.0'),
-    setup_py_command='build_ext'
+    setup_py_command='build_ext',
+    build_dependencies=['numpy', 'Cython']
 )

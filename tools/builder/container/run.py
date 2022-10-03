@@ -8,6 +8,8 @@ from builder.common import args
 from builder import __version__
 from builder.build.orchestrate import discover_build_packages_sync
 from builder.build.types import GlobalBuildContext
+from builder.common.shellcommand import ShellCommandFailed
+import sys
 
 
 def run_from_cmdline() -> None:
@@ -31,15 +33,33 @@ def run_from_cmdline() -> None:
     parsed_args = parser.parse_args()
     repo_base = Path(parsed_args.package_repo_base)
 
-    run_build(
-        Path(parsed_args.package_repo_base) / "packages",
-        Path(parsed_args.buildroot_sdk_base),
-        _ensure_path(repo_base, Path(parsed_args.build_tree_root)),
-        _ensure_path(repo_base, Path(parsed_args.dist_tree_root)),
-        parsed_args.output,
-        parsed_args.verbose,
-    )
+    try:
+        run_build(
+            Path(parsed_args.package_repo_base) / "packages",
+            Path(parsed_args.buildroot_sdk_base),
+            _ensure_path(repo_base, Path(parsed_args.build_tree_root)),
+            _ensure_path(repo_base, Path(parsed_args.dist_tree_root)),
+            parsed_args.output,
+            parsed_args.verbose,
+        )
+    except ShellCommandFailed as scf:
+        # Invert the usual verbosity logic here because if we're verbose, then
+        # we already printed all the output as it happened; if we're not, then
+        # we should make sure the user can see it.
+        if not parsed_args.verbose:
+            print(f"{scf.message}: {scf.returncode}: {''.join(scf.output)}", file=parsed_args.output)
+        else:
+            print(f'{scf.message}: {scf.returncode}', file=parsed_args.output)
+        sys.exit(1)
+    except Exception as exc:
+        if args.verbose:
+            import traceback
 
+            print("\n".join(traceback.format_exception(exc)), file=parsed_args.output)
+        else:
+            print(f"Build failed: {str(exc)}", file=parsed_args.output)
+        sys.exit(2)
+    sys.exit(0)
 
 def _ensure_path(repo_base: Path, possibly_relative: Path) -> Path:
     if possibly_relative.is_absolute():

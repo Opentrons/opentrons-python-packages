@@ -83,6 +83,7 @@ def discover_build_package(
 def build_package(
         source: GithubDevSource | GithubReleaseSDistSource,
         setup_py_command: str | None = None,
+        build_dependencies: list[str] | None = None,
         ) -> str:
     """
     Build a package. The main entry point for package builds.
@@ -97,6 +98,7 @@ def build_package(
                was run.
     setup_py_command: The command to use with setup.py to build the package. If
                       not specified, build_wheel.
+    build_dependencies: any python dependencies required for the build.
 
     Returns
     -------
@@ -114,10 +116,11 @@ def build_package(
     download_dir = context.paths.build_path / 'download/'
     build_dir = context.paths.build_path / 'build/'
     unpack_dir = context.paths.build_path / 'unpack/'
+    venv_dir = context.paths.build_path / 'venv'
 
-    command = setup_py_command or 'build_wheel'
+    command = setup_py_command or 'bdist_wheel'
 
-    for dirname in (download_dir, build_dir, unpack_dir):
+    for dirname in (download_dir, build_dir, unpack_dir, venv_dir):
         dirname.mkdir(exist_ok=True)
 
     fetched = fetch_source(source, download_dir, context=context.context)
@@ -128,6 +131,9 @@ def build_package(
         getattr(source, 'package_source_path') or Path('.'),
         context=context.context)
     context.context.write(f'Unpacked to {str(unpacked)}')
-    wheelfile = build_with_setup_py(command, unpacked, build_dir, context.paths.dist_path,
-                                    context=context.context)
+    wheelfile = build_with_setup_py(
+        command, unpacked,
+        build_dir, context.paths.dist_path, venv_dir,
+        build_dependencies or [],
+        context=context.context)
     return wheelfile

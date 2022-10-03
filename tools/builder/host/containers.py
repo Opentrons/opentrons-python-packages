@@ -29,7 +29,7 @@ def run_container(
     print("Running build", file=output)
     run_simple(
         _container_run_invoke_cmd(container_str, forwarded_argv, root_path),
-        name="container build",
+        name="package build",
         output=output,
         verbose=verbose,
     )

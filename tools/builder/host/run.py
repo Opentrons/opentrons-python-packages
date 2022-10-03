@@ -43,7 +43,7 @@ def run_from_cmdline() -> NoReturn:
         if args.verbose:
             import traceback
 
-            print("\n".join(traceback.format_exception(exc)), file=args.output)
+            print("".join(traceback.format_exception(exc)), file=args.output)
         else:
             print(f"Build failed: {str(exc)}", file=args.output)
         sys.exit(2)

@@ -52,10 +52,10 @@ def run_from_cmdline() -> None:
             print(f'{scf.message}: {scf.returncode}', file=parsed_args.output)
         sys.exit(1)
     except Exception as exc:
-        if args.verbose:
+        if parsed_args.verbose:
             import traceback
 
-            print("\n".join(traceback.format_exception(exc)), file=parsed_args.output)
+            print("".join(traceback.format_exception(exc)), file=parsed_args.output)
         else:
             print(f"Build failed: {str(exc)}", file=parsed_args.output)
         sys.exit(2)

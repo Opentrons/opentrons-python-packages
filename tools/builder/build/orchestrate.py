@@ -82,7 +82,7 @@ def discover_build_package(
 # package build files. It relies on having the build paths in the globals.
 def build_package(
         source: GithubDevSource | GithubReleaseSDistSource,
-        setup_py_command: str | None = None,
+        setup_py_commands: list[str] | None = None,
         build_dependencies: list[str] | None = None,
         ) -> str:
     """
@@ -118,7 +118,7 @@ def build_package(
     unpack_dir = context.paths.build_path / 'unpack/'
     venv_dir = context.paths.build_path / 'venv'
 
-    command = setup_py_command or 'bdist_wheel'
+    commands = setup_py_commands or ['bdist_wheel']
 
     for dirname in (download_dir, build_dir, unpack_dir, venv_dir):
         dirname.mkdir(exist_ok=True)
@@ -132,7 +132,7 @@ def build_package(
         context=context.context)
     context.context.write(f'Unpacked to {str(unpacked)}')
     wheelfile = build_with_setup_py(
-        command, unpacked,
+        commands, unpacked,
         build_dir, context.paths.dist_path, venv_dir,
         build_dependencies or [],
         context=context.context)

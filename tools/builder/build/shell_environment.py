@@ -8,6 +8,8 @@ from typing import Callable, TypeVar, Type, Iterator
 import shlex
 import re
 import time
+import sys
+from functools import wraps
 from builder.common.shellcommand import ShellCommandFailed
 
 _SubshellType = TypeVar('_SubshellType', bound='SDKSubshell')
@@ -32,6 +34,15 @@ class SDKSubshell:
     """
 
     _result_re = re.compile(r'^xxxresultxxx:xxx(-?\d+)xxx$', flags=re.MULTILINE)
+
+    @staticmethod
+    def echo_wrap_prevent_double_newlines(echoer: EchoFunc) -> EchoFunc:
+        @wraps(echoer)
+        def _remove_nl_wrapper(logstr: str) -> None:
+            if logstr.endswith('\n'):
+                logstr = logstr[:-1]
+            echoer(logstr)
+        return _remove_nl_wrapper
 
     @classmethod
     @contextmanager
@@ -75,6 +86,24 @@ class SDKSubshell:
 
     def run(self, cmd: list[str]) -> str:
         return '\n'.join(self._guarded_shellcall(shlex.join(cmd)))
+
+    def initiate_python_environment(self, sdk_path: Path):
+        sysroot = sdk_path / 'arm-buildroot-linux-gnueabihf' / 'sysroot'
+        sysconfigdata_name = '_sysconfigdata__linux_arm-linux-gnueabihf'
+        pythonpath = (
+            sysroot
+            / 'usr'
+            / 'lib'
+            / 'python3.10'
+        )
+        self._guarded_shellcall(f'export _PYTHON_HOST_PLATFORM=linux-x86_64-linux-gnu')
+        self._guarded_shellcall(f'export _PYTHON_SYSCONFIGDATA_NAME={sysconfigdata_name}')
+        self._guarded_shellcall(f'export PYTHONPATH={pythonpath}')
+        self._guarded_shellcall(f'export SETUPTOOLS_USE_DISTUTILS=stdlib')
+        self._guarded_shellcall(f'export _python_sysroot={sysroot}')
+        self._guarded_shellcall(f'export _python_prefix=/usr')
+        self._guarded_shellcall(f'export _python_exec_prefix=/usr')
+        self._guarded_shellcall(f'export PYTHONNOUSERSITE=1')
 
     def _shellcall(self, cmd: str, handles: _SubshellHandles,
                    *, command_echo_is_verbose: bool = False) -> tuple[int, list[str]]:

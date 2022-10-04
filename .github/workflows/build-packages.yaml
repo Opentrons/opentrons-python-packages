@@ -22,9 +22,8 @@ jobs:
       - name: 'Run the build'
         id: package-build
         run: |
-          # CHANGE ME: do not merge with container-tag :dev, wait until at least
-          # a main is available and ideally a full tagged version on :latest
-          ./build-packages --container-source=pull --container-tag=dev
+          # CHANGE ME: this should use :main once main is functional
+          ./build-packages --container-source=pull --container-tag=dev --verbose
       - name: 'Upload artifacts to temporary storage'
         uses: 'actions/upload-artifact@v3'
         with:

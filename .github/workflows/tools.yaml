@@ -52,7 +52,7 @@ jobs:
       - name: 'Build the container'
         id: container-build
         run: |
-          ./build-packages --prep-container-only --container-source=build
+          ./build-packages --prep-container-only --container-source=build --verbose
       - name: "Deploy the container to :main"
         id: container-deploy-main
         if: ${{github.ref == 'refs/heads/main'}}
@@ -90,7 +90,7 @@ jobs:
           python-version: '3.10'
       - name: 'Run the build'
         run: |
-          ./build-packages --container-source=build
+          ./build-packages --container-source=build --verbose
       - name: 'Upload artifacts to temporary storage'
         uses: 'actions/upload-artifact@v3'
         with:

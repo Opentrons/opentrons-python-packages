@@ -136,4 +136,5 @@ def build_package(
         build_dir, context.paths.dist_path, venv_dir,
         build_dependencies or [],
         context=context.context)
+    context.context.write(f'Built {wheelfile}')
     return wheelfile

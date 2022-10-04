@@ -66,8 +66,8 @@ def build_with_setup_py(
         for command in commands:
             output += shell.run(
                 ['python', 'setup.py', command] + args_for_command(command, source_dir, build_dir, dist_dir))
-        wheelname = re.search(r'^creating.*([\w-\.]\.whl).*$', output, re.MULTILINE)
+        wheelname = re.search(r'^creating.*?([\w\-\.]*\.whl).*$', output, re.MULTILINE)
         if not wheelname:
             context.write('Build failed: could not find wheelname')
             raise RuntimeError()
-        return wheelname.group(1)
+        return dist_dir / wheelname.group(1)

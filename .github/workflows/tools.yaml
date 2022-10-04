@@ -51,7 +51,7 @@ jobs:
       - name: 'Build the container'
         id: container-build
         run: |
-          ./build --prep-container-only --container-source=build
+          ./build-packages --prep-container-only --container-source=build
       - name: "Deploy the container to :main"
         id: container-deploy-main
         if: ${{github.ref == 'refs/heads/main'}}

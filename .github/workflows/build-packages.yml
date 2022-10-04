@@ -1,12 +1,13 @@
 on:
-  branches:
-    - "*"
-  paths:
-    - "packages/**/*"
-    - "build-packages"
-  tags:
-    - "packages@*"
-  workflow_dispatch:
+  push:
+    branches:
+      - "*"
+    paths:
+      - "packages/**/*"
+      - "build-packages"
+    tags:
+      - "packages@*"
+    workflow_dispatch:
 
 jobs:
   build-packages:

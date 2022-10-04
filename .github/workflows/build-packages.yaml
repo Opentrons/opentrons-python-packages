@@ -5,6 +5,7 @@ on:
     paths:
       - "packages/**/*"
       - "build-packages"
+      - ".github/workflows/build-packages.yaml"
     tags:
       - "packages@*"
     workflow_dispatch:

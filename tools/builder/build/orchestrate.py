@@ -84,7 +84,7 @@ def build_package(
         source: GithubDevSource | GithubReleaseSDistSource,
         setup_py_commands: list[str] | None = None,
         build_dependencies: list[str] | None = None,
-        ) -> str:
+        ) -> Path:
     """
     Build a package. The main entry point for package builds.
 

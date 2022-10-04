@@ -42,7 +42,7 @@ def build_with_setup_py(
         commands: list[str],
         source_dir: Path, build_dir: Path, dist_dir: Path, venv_dir: Path,
         build_dependencies: list[str],
-        *, context: GlobalBuildContext) -> str:
+        *, context: GlobalBuildContext) -> Path:
     """Build a package."""
     context.write(f'Building package with python setup.py {" ".join(commands)}')
     with SDKSubshell.scoped(

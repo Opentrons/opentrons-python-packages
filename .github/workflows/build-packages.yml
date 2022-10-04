@@ -1,0 +1,30 @@
+on:
+  branches:
+    - "*"
+  paths:
+    - "packages/**/*"
+    - "build-packages"
+  tags:
+    - "packages@*"
+  workflow_dispatch:
+
+jobs:
+  build-packages:
+    runs-on: 'ubuntu-latest'
+    name: 'run build'
+    steps:
+      - uses: 'actions/checkout@v3'
+      - uses: 'actions/setup-python@v4'
+        with:
+          python-version: '3.10'
+      - name: 'Run the build'
+        id: package-build
+        run: |
+          # CHANGE ME: do not merge with container-tag :dev, wait until at least
+          # a main is available and ideally a full tagged version on :latest
+          ./build-packages --container-source=pull --container-tag=dev
+      - name: 'Upload artifacts to temporary storage'
+        uses: 'actions/upload-artifact@v3'
+        with:
+          name: "opentrons-python-packages"
+          path: "dist/**/*"

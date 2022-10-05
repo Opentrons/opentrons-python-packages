@@ -19,7 +19,7 @@ def args_for_bdist_wheel(
         dist_dir: Path
 ) -> list[str]:
     """args for wheel"""
-    return [f'--dist-dir={str(dist_dir)}', f'--bdist-dir={str(build_dir)}', '--plat-name=linux_arm-linux-gnueabihf']
+    return [f'--dist-dir={str(dist_dir)}', f'--bdist-dir={str(build_dir)}', '--plat-name=linux_armv7l']
 
 def args_for_command(
         command: str,

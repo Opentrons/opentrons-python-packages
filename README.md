@@ -38,13 +38,13 @@ The build tools are a separate package that is developed in this repo in `./tool
 
 To add a package to the repo, make a new set of directories in the `package/` directory for it. A best practice is to make that directory named `package_name/version` - for instance, `package/pandas/1.5.0`. For instance, if you wanted to add another version of pandas, you could add `package/pandas/2.0.0`.
 
-In that directory, make a python script called `build.py`.  Its job is to call `build.build_package` with correct arguments. A good example is `package/pandas/1.5.0/build.py`. `build.build_package` lives in `tools/builder/build/orchestrate.py` if you want to look at the source. 
+In that directory, make a python script called `build.py`.  Its job is to call `build.build_package` with correct arguments. A good example is `package/pandas/1.5.0/build.py`. `build.build_package` lives in `tools/builder/package_build/orchestrate.py` if you want to look at the source. 
 
-The `source` argument takes an object describing where to get the package. There is a helper function to build it: `builder.build.github_source`, which lets you specify
+The `source` argument takes an object describing where to get the package. There is a helper function to build it: `builder.package_build.github_source`, which lets you specify
 - the github org (i.e. `pandas-dev` for pandas)
 - the github repo (i.e. `pandas` for pandas)
 - a git tag to find
-- some other options about how the package is distributed and what kind of source it is. Check out `tools/builder/build/__init__.py` to see more.
+- some other options about how the package is distributed and what kind of source it is. Check out `tools/builder/package_build/__init__.py` to see more.
 
 Then, you set the `setup_commands` (typically these will be `build_ext` and `bdist_wheel`, but it depends on the package) and any build dependencies. Build dependencies are probably listed in the package metadata; they may be there as `setup_depends` or pyproject toml build system requirements. They may also just be assumed to be present. You can figure out what's required by reading the package code, or by trying to build it in an empty venv.
 

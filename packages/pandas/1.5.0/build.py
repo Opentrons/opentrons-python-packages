@@ -1,7 +1,7 @@
-from builder import build
+from builder import package_build
 
-build.build_package(
-    source=build.github_source(
+package_build.build_package(
+    source=package_build.github_source(
         org='pandas-dev',
         repo='pandas',
         tag='v1.5.0'),

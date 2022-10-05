@@ -60,13 +60,13 @@ The host-side code is in `builder/host` and `builder/common`. The job of this co
 ### Container side
 
 The container side code has to actually build all the packages. This duplicates some of the functionality of buildroot. Its job is to
-1. Find the package and run its `build.py` (in `builder/build/orchestrate.py`)
+1. Find the package and run its `build.py` (in `builder/package_build/orchestrate.py`)
 2. Make sure we have everything we need to build the package, such as 
-   - package sources (`builder/build/download.py`)
-   - package build dependencies (`builder/build/build_wheel.py`)
+   - package sources (`builder/package_build/download.py`)
+   - package build dependencies (`builder/package_build/build_wheel.py`)
    - an activated buildroot sdk
    - an activated python virtual environment with the build dependencies
    - correct environments for forcing python to cross-compile
 3. Actually run the build and harvest the results (also `build_wheel.py`)
 
-The most complex part of this is making sure there's a correct environment to build things. The environment is important because it's the only way to pass certain options to the wheel builder (like the platform it should compile for) and provide cross compilation tools. This is done by having a long-running interactive shell that we communicate with in `builder/build/shell_environment.py`. 
+The most complex part of this is making sure there's a correct environment to build things. The environment is important because it's the only way to pass certain options to the wheel builder (like the platform it should compile for) and provide cross compilation tools. This is done by having a long-running interactive shell that we communicate with in `builder/package_build/shell_environment.py`. 

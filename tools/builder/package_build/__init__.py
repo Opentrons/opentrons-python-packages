@@ -1,5 +1,5 @@
 """
-builder.build - entrypoints for building python packages
+builder.package_build - entrypoints for building python packages
 
 This is the part of the builder package that actually builds python wheels,
 using other internal components. This __init__ re-exports everything required

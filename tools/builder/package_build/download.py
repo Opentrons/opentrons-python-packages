@@ -1,5 +1,5 @@
 """
-builder.build.download - tools to download package sources
+builder.package_build.download - tools to download package sources
 """
 
 import os

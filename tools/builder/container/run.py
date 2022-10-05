@@ -6,8 +6,8 @@ import io
 from pathlib import Path
 from builder.common import args
 from builder import __version__
-from builder.build.orchestrate import discover_build_packages_sync
-from builder.build.types import GlobalBuildContext
+from builder.package_build.orchestrate import discover_build_packages_sync
+from builder.package_build.types import GlobalBuildContext
 from builder.common.shellcommand import ShellCommandFailed
 import sys
 

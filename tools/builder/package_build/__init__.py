@@ -9,23 +9,35 @@ from typing import overload
 from .types import GithubDevSource, GithubReleaseSDistSource
 from .orchestrate import build_package
 
-@overload
-def github_source(*, org: str, repo: str, tag: str, sdist_archive: str,
-                  name: str | None = None,) -> GithubReleaseSDistSource:
-    pass
 
 @overload
-def github_source(*, org: str, repo: str, tag: str, name: str | None = None, path: str | None = None) -> GithubDevSource:
+def github_source(
+    *,
+    org: str,
+    repo: str,
+    tag: str,
+    sdist_archive: str,
+    name: str | None = None,
+) -> GithubReleaseSDistSource:
     pass
+
+
+@overload
+def github_source(
+    *, org: str, repo: str, tag: str, name: str | None = None, path: str | None = None
+) -> GithubDevSource:
+    pass
+
 
 def github_source(
-        *,
-        org: str,
-        repo: str,
-        tag: str,
-        sdist_archive: str | None = None,
-        name: str | None = None,
-        path: str | None = None) -> GithubDevSource | GithubReleaseSDistSource:
+    *,
+    org: str,
+    repo: str,
+    tag: str,
+    sdist_archive: str | None = None,
+    name: str | None = None,
+    path: str | None = None,
+) -> GithubDevSource | GithubReleaseSDistSource:
     """
     Tell the system this package is fetched from github.
 
@@ -46,7 +58,12 @@ def github_source(
     """
     sourcename = name or repo
     if sdist_archive:
-        return GithubReleaseSDistSource(name=sourcename, org=org, repo=repo, tag=tag, package_name=sdist_archive)
-    return GithubDevSource(name=sourcename, org=org, repo=repo, tag=tag, package_source_path=path)
+        return GithubReleaseSDistSource(
+            name=sourcename, org=org, repo=repo, tag=tag, package_name=sdist_archive
+        )
+    return GithubDevSource(
+        name=sourcename, org=org, repo=repo, tag=tag, package_source_path=path
+    )
 
-__all__ = ['github_source', 'build_package']
+
+__all__ = ["github_source", "build_package"]

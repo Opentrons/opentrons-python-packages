@@ -3,6 +3,7 @@ from .shell_environment import SDKSubshell
 from pathlib import Path
 from .types import GlobalBuildContext
 import re
+from typing import Iterator
 
 
 def args_for_build_ext(source_dir: Path, build_dir: Path, dist_dir: Path) -> list[str]:
@@ -36,6 +37,22 @@ def args_for_command(
     return []
 
 
+def update_build_dependencies(deps: list[str]) -> Iterator[str]:
+    """some build dependencies need alteration to actually match what buildroot does."""
+    for dep in deps:
+        if dep == "numpy":
+            # if the package requests numpy as a _build_ dependency, it is
+            # probably because the package has cythonized components and uses the numpy
+            # c api. the numpy c api changed in 1.20:
+            # https://github.com/numpy/numpy/pull/16938
+            # this is backwards-compatible in that code compiled on numpy 1.16 will work on
+            # numpy 1.20, but not in the sense that code compiled on numpy 1.20 will work
+            # on previous versions. so use the older version.
+            yield "numpy==1.16.6"
+        else:
+            yield dep
+
+
 def build_with_setup_py(
     commands: list[str],
     source_dir: Path,
@@ -67,7 +84,7 @@ def build_with_setup_py(
         ]
         shell.run(
             [f'PYTHONPATH={":".join(own_paths)}', "python", "-m", "pip", "install"]
-            + build_dependencies
+            + [dep for dep in build_dependencies]
             + ["wheel"]
         )
         shell.initiate_python_environment(context.sdk_path)

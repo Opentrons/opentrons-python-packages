@@ -5,7 +5,7 @@ from pkginfo import Wheel  # type: ignore
 from shutil import copyfile
 from glob import iglob
 from itertools import chain
-from typing import Iterable, Iterator, cast
+from typing import Iterable, Iterator
 from .root_index import generate as generate_root
 from .package_leaf import generate as generate_leaf
 from collections import defaultdict
@@ -109,12 +109,7 @@ def collate_to_packages(distributions: Iterable[Path]) -> dict[str, set[Path]]:
     Turns the flat list of paths to distributions into a mapping of package names to
     a set of distributions for the package.
     """
-    result: defaultdict[str, set[Path]] = defaultdict(
-        # this cast is needed because I think mypy sees the set argument as a Type
-        # rather than as the type constructor: Type[Set[Any]] rather than
-        # Callable[Any, Set[Any]]
-        default_factory=cast(set[Path], set)
-    )
+    result: defaultdict[str, set[Path]] = defaultdict(set)
     for dist in distributions:
         result[Wheel(dist).name].add(dist)
     return result

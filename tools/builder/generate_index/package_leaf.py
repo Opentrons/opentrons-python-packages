@@ -29,7 +29,8 @@ def generate(
     idx("<!DOCTYPE html>")
     with idx.html():
         with idx.head():
-            idx.title(f"{package_path.name} at Opentrons Python Package Index")
+            with idx.title():
+                idx(f"{package_path.name} at Opentrons Python Package Index")
         with idx.body():
             for dist in distributions:
                 digest = hexlify(sha256(open(dist, "rb").read()).digest())

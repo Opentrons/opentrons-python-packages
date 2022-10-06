@@ -26,6 +26,13 @@ def dist_path(run_path: Path) -> Path:
 
 
 @pytest.fixture
+def index_path(run_path: Path) -> Path:
+    index_tree_root = run_path / "index"
+    copytree(TEST_DATA_DIR / "index", index_tree_root)
+    return index_tree_root
+
+
+@pytest.fixture
 def downloaded_artifacts() -> list[Path]:
     return list((TEST_DATA_DIR / "download").iterdir())
 
@@ -47,4 +54,5 @@ def package_names(dist_path: Path) -> list[str]:
 
 @pytest.fixture
 def dist_files(dist_path: Path) -> set[Path]:
-    return {Path(pth) for pth in glob(str(dist_path / "**" / "*.whl"))}
+    files = {Path(pth) for pth in glob(str(dist_path / "**" / "*.whl"), recursive=True)}
+    return files

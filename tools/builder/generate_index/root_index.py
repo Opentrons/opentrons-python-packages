@@ -25,7 +25,8 @@ def generate(index_root: Path, package_dirs: Iterable[Path]) -> str:
     idx("<!DOCTYPE html>")
     with idx.html():
         with idx.head():
-            idx.title("Opentrons Python Package Index")
+            with idx.title():
+                idx("Opentrons Python Package Index")
         with idx.body():
             for package in package_dirs:
                 with idx.a(href=(str(Path("/") / (package.relative_to(index_root))))):

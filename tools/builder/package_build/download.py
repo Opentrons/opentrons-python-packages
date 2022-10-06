@@ -41,14 +41,14 @@ def unpack_source(
 def _verify_tar_member(
     path: Path, member: tarfile.TarInfo, *, context: GlobalBuildContext
 ) -> tarfile.TarInfo:
-    unpack_to = Path(os.path.realpath(path / member.name))
+    unpack_to = Path(os.path.realpath(path / Path(member.name).name))
     try:
         common = Path(os.path.commonpath([unpack_to, path]))
     except ValueError:
         pass
-    if common != unpack_to:
+    if common != path:
         raise RuntimeError(
-            f"Will not unpack archive member {member.name}: outside unpack dir"
+            f"Will not unpack archive member {member.name} to {unpack_to}: outside unpack dir: {common}"
         )
     # this archive member is trying to unpack itself somewhere above
     # the unpack location, i.e. contains a path traversal (possibly by

@@ -107,7 +107,7 @@ def generate_and_fill_package_dir(
     package_dir.mkdir(parents=True, exist_ok=True)
     dists_in_package = list(copy_dists_to_leaf(package_dir, dists))
     simple_url = simple_url_from_index_url(index_root_url)
-    package_url = urljoin(simple_url, f'{package_dir.name}/')
+    package_url = urljoin(simple_url, f"{package_dir.name}/")
     print(package_url)
     leaf_index_contents = generate_leaf(
         urljoin(simple_url, f"{package_dir.name}/"),

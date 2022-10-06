@@ -53,5 +53,11 @@ def add_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         default="./build",
         help="Location for the tree of package build areas",
     )
+    parser.add_argument(
+        "--index-tree-root",
+        action="store",
+        default="./index",
+        help="Location for the generated simple index site",
+    )
 
     return parser

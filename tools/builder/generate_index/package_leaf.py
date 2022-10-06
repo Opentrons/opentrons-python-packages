@@ -1,10 +1,15 @@
 """generate_index.package_leaf: generate metadata in a package leaf dir"""
 from pathlib import Path
 from hashlib import sha256
+from typing import Iterable
+from binascii import hexlify
 
-from airium import Airium
+from airium import Airium  # type: ignore[import]
 
-def generate(index_root: Path, package_path: Path, distributions: Iterable[Path]) -> list[Path]:
+
+def generate(
+    index_root: Path, package_path: Path, distributions: Iterable[Path]
+) -> str:
     """Generate a package leaf directory with index and hashes
 
     Params
@@ -21,14 +26,18 @@ def generate(index_root: Path, package_path: Path, distributions: Iterable[Path]
     The generated html file
     """
     idx = Airium()
-    idx('<!DOCTYPE html>')
+    idx("<!DOCTYPE html>")
     with idx.html():
         with idx.head():
-            idx.title(f'{package_name} at Opentrons Python Package Index')
+            idx.title(f"{package_path.name} at Opentrons Python Package Index")
         with idx.body():
             for dist in distributions:
-                digest = hex(sha256(open(dist).read()))[2:]
-                with idx.a(href=(str(Path('/')/(dist.relative_to(index_root))) + f'#sha256={digest}')):
+                digest = hexlify(sha256(open(dist, "rb").read()).digest())
+                with idx.a(
+                    href=(
+                        str(Path("/") / (dist.relative_to(index_root)))
+                        + f"#sha256={digest.decode()}"
+                    )
+                ):
                     idx(dist.name)
-
     return str(idx)

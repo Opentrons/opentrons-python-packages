@@ -9,6 +9,7 @@ from builder import __version__
 from builder.package_build.orchestrate import discover_build_packages_sync
 from builder.package_build.types import GlobalBuildContext
 from builder.common.shellcommand import ShellCommandFailed
+from builder.generate_index import generate as build_index
 import sys
 
 
@@ -39,6 +40,7 @@ def run_from_cmdline() -> None:
             Path(parsed_args.buildroot_sdk_base),
             _ensure_path(repo_base, Path(parsed_args.build_tree_root)),
             _ensure_path(repo_base, Path(parsed_args.dist_tree_root)),
+            _ensure_path(repo_base, Path(parsed_args.index_tree_root)),
             parsed_args.output,
             parsed_args.verbose,
         )
@@ -76,6 +78,7 @@ def run_build(
     buildroot_sdk_base: Path,
     build_tree_root: Path,
     dist_tree_root: Path,
+    index_tree_root: Path,
     output: io.TextIOBase,
     verbose: bool,
 ) -> None:
@@ -92,7 +95,7 @@ def run_build(
     output: a text io that can be used to write build logs
     verbose: whether those logs should be verbose
     """
-    print(f"Building with tools version {__version__}")
+    print(f"Building with tools version {__version__}", file=output)
     context = GlobalBuildContext(
         output=output, verbose=verbose, sdk_path=buildroot_sdk_base
     )
@@ -100,3 +103,7 @@ def run_build(
     discover_build_packages_sync(
         package_tree_root, build_tree_root, dist_tree_root, context=context
     )
+    print("Package build complete!", file=output)
+    print("Building pypi index", file=output)
+    index_files = build_index(index_tree_root, dist_tree_root)
+    print(f"Index build complete in {index_files[0]}", file=output)

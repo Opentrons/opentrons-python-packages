@@ -2,10 +2,10 @@
 from pathlib import Path
 from typing import Iterable
 
-from airium import Airium
+from airium import Airium  # type: ignore[import]
 
 
-def generate(index_root: Path, package_dirs: list[Path]) -> str:
+def generate(index_root: Path, package_dirs: Iterable[Path]) -> str:
     """Generate a PEP503 compliant simple index root html file.
 
     Params
@@ -22,12 +22,12 @@ def generate(index_root: Path, package_dirs: list[Path]) -> str:
     The generated html file
     """
     idx = Airium()
-    idx('<!DOCTYPE html>')
+    idx("<!DOCTYPE html>")
     with idx.html():
         with idx.head():
-            idx.title('Opentrons Python Package Index')
+            idx.title("Opentrons Python Package Index")
         with idx.body():
-            for package in packages:
-                with idx.a(href=(str(Path('/')/(dist.relative_to(index_root))))):
+            for package in package_dirs:
+                with idx.a(href=(str(Path("/") / (package.relative_to(index_root))))):
                     idx(package.name)
     return str(idx)

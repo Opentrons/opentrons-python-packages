@@ -22,7 +22,7 @@ style="semver"
 pattern="^tools@v((?P<epoch>\\d+)!)?(?P<base>\\d+(\\.\\d+)*)([-._]?((?P<stage>[a-zA-Z]+)[-._]?(?P<revision>\\d+)?))?(\\+(?P<tagged_metadata>.+))?$"
 
 [tool.poe.tasks]
-format = 'black .'
+format = 'black ./builder ./tests'
 test = 'py.test ./tests'
 _formatcheck = 'black --check ./builder ./tests'
 _flake8 = 'pflake8 ./builder ./tests'
@@ -53,7 +53,7 @@ warn_return_any = true
 
 [tool.flake8]
 max-complexity = 9
-extend-ignore = ["E203","E501", "ANN101", "ANN102", "E302", "E251", "E305", "E125", "E231", "E127", "E261"]
+extend-ignore = ["E203","E501", "ANN101", "ANN102", "E302", "E251", "E305", "E125", "E231", "E127", "E261", "W391"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]

@@ -1,5 +1,8 @@
 """Conftest for all builder tests"""
 from pathlib import Path
+from glob import glob
+from shutil import copytree
+
 import pytest
 
 TEST_DATA_DIR = Path(__file__).parent / "test_data"
@@ -17,7 +20,9 @@ def build_path(run_path: Path) -> Path:
 
 @pytest.fixture
 def dist_path(run_path: Path) -> Path:
-    return run_path / "dist"
+    dist_tree_root = run_path / "dist"
+    copytree(TEST_DATA_DIR / "dist", dist_tree_root)
+    return dist_tree_root
 
 
 @pytest.fixture
@@ -33,3 +38,13 @@ def downloaded_source_zip() -> Path:
 @pytest.fixture
 def downloaded_sdist_tar() -> Path:
     return TEST_DATA_DIR / "download" / "some-test-tar.tar.gz"
+
+
+@pytest.fixture
+def package_names(dist_path: Path) -> list[str]:
+    return [str(package.name) for package in dist_path.iterdir()]
+
+
+@pytest.fixture
+def dist_files(dist_path: Path) -> set[Path]:
+    return {Path(pth) for pth in glob(str(dist_path / "**" / "*.whl"))}

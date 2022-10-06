@@ -22,7 +22,8 @@ jobs:
       - name: 'Run the build'
         id: package-build
         run: |
-          # CHANGE ME: this should use :main once main is functional
+          # CHANGEME: this should use :main once main is functional
+          # CHANGEME: this should specify a url for deployment when deployment is added
           ./build-packages --container-source=pull --container-tag=dev --verbose
       - name: 'Upload artifacts to temporary storage'
         uses: 'actions/upload-artifact@v3'

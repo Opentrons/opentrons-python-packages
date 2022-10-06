@@ -47,6 +47,10 @@ You can
 
 The top-level `./build` script entrypoint is going to mostly try to download the latest release of the build tools docker container rather than use your local stuff. It also lives in a top level directory which is annoying to use. To test locally you can use the poetry entrypoint `poetry poe run-build`.
 
+## Testing Content
+
+Once you do a package build, you can see how it looked by doing `poetry run serve PORT` where you specify a port. You'll have to set the port in the build flags.
+
 ## How does this all work, anyway?
 
 The core of the problem this package solves is building python packages for arm7hf on an x86_64 machine - cross compiling them. To do this it takes a lot of cues and support from buildroot.

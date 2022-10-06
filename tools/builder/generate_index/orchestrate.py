@@ -9,32 +9,37 @@ from typing import Iterable, Iterator
 from .root_index import generate as generate_root
 from .package_leaf import generate as generate_leaf
 from collections import defaultdict
+from urllib.parse import urljoin
 
 
-def generate(index_root: Path, dist_root: Path) -> list[Path]:
+def generate(index_root_url: str, index_root: Path, dist_root: Path) -> list[Path]:
     """
     Inspect a tree of package distributions and build an index in index_root for them.
     """
-    return generate_for_distributions(index_root, distributions_from_tree(dist_root))
+    return generate_for_distributions(
+        index_root_url, index_root, distributions_from_tree(dist_root)
+    )
 
 
 def distributions_from_tree(dist_root: Path) -> Iterator[Path]:
     """Inspect a dist tree and find distribution paths."""
-    return (Path(pth) for pth in iglob(str(dist_root / "**" / "*.whl")))
+    return (Path(pth) for pth in iglob(str(dist_root / "**" / "*.whl"), recursive=True))
 
 
 def generate_for_distributions(
-    index_root: Path, distributions: Iterable[Path]
+    index_root_url: str, index_root_path: Path, distributions: Iterable[Path]
 ) -> list[Path]:
     """
     Generate an index for a list of packages in a root path.
 
     Params
     ------
-    index_root: The path to generate the index in. The index will be generated such that
-                if you run a static webserver with index_root as the served directory,
-                the resulting server will be PEP503 compliant. That means files will be
-                under index_root/simple/.
+    index_root_url: a URL where the index will be hosted - necessary for writing
+                    nice urls
+    index_root_path: The path to generate the index in. The index will be generated
+                     such that if you run a static webserver with index_root as the
+                     served directory, the resulting server will be PEP503 compliant.
+                     That means files will be under index_root/simple/.
     distributions: A list of paths to package distributions. A package might have
                    multiple distributions.
 
@@ -43,16 +48,21 @@ def generate_for_distributions(
     A list of paths to each file and directory in the index, with the root as the first.
     """
     by_package = collate_to_packages(distributions)
-
+    if not index_root_url.endswith("/"):
+        index_root_url += "/"
     return (
-        [index_root]
+        [index_root_path]
         + generate_simple_index_dir(
-            index_root, package_dirs_from_names(index_root, by_package.keys())
+            index_root_url,
+            index_root_path,
+            package_dirs_from_names(index_root_path, by_package.keys()),
         )
         + list(
             chain.from_iterable(
                 [
-                    generate_and_fill_package_dir(index_root, package, dists)
+                    generate_and_fill_package_dir(
+                        index_root_url, index_root_path, package, dists
+                    )
                     for package, dists in by_package.items()
                 ]
             )
@@ -64,6 +74,12 @@ def simple_root_from_index_root(index_root: Path) -> Path:
     return index_root / "simple"
 
 
+def simple_url_from_index_url(index_url: str) -> str:
+    if not index_url.endswith("/"):
+        index_url += "/"
+    return urljoin(index_url, "simple/")
+
+
 def package_dirs_from_names(
     root_path: Path, package_names: Iterable[str]
 ) -> Iterator[Path]:
@@ -71,11 +87,12 @@ def package_dirs_from_names(
 
 
 def generate_simple_index_dir(
-    index_root: Path, package_dirs: Iterable[Path]
+    index_root_url: str, index_root_path: Path, package_dirs: Iterable[Path]
 ) -> list[Path]:
-    simple_root = simple_root_from_index_root(index_root)
+    simple_root = simple_root_from_index_root(index_root_path)
     simple_root.mkdir(parents=True, exist_ok=True)
-    root_index_contents = generate_root(index_root, package_dirs)
+    simple_url = simple_url_from_index_url(index_root_url)
+    root_index_contents = generate_root(simple_url, index_root_path, package_dirs)
     root_index_path = simple_root / "index.html"
     with open(root_index_path, "w") as root_index:
         root_index.write(root_index_contents)
@@ -83,13 +100,21 @@ def generate_simple_index_dir(
 
 
 def generate_and_fill_package_dir(
-    index_root: Path, package_name: str, dists: set[Path]
+    index_root_url: str, index_root_path: Path, package_name: str, dists: set[Path]
 ) -> list[Path]:
-    simple_root = simple_root_from_index_root(index_root)
+    simple_root = simple_root_from_index_root(index_root_path)
     package_dir = simple_root / package_name
     package_dir.mkdir(parents=True, exist_ok=True)
     dists_in_package = list(copy_dists_to_leaf(package_dir, dists))
-    leaf_index_contents = generate_leaf(simple_root, package_dir, dists_in_package)
+    simple_url = simple_url_from_index_url(index_root_url)
+    package_url = urljoin(simple_url, f'{package_dir.name}/')
+    print(package_url)
+    leaf_index_contents = generate_leaf(
+        urljoin(simple_url, f"{package_dir.name}/"),
+        simple_root,
+        package_dir,
+        dists_in_package,
+    )
     leaf_index_path = package_dir / "index.html"
     with open(leaf_index_path, "w") as leaf_index:
         leaf_index.write(leaf_index_contents)

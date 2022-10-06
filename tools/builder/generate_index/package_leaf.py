@@ -3,12 +3,16 @@ from pathlib import Path
 from hashlib import sha256
 from typing import Iterable
 from binascii import hexlify
+from urllib.parse import urljoin
 
 from airium import Airium  # type: ignore[import]
 
 
 def generate(
-    index_root: Path, package_path: Path, distributions: Iterable[Path]
+    package_url: str,
+    index_root: Path,
+    package_path: Path,
+    distributions: Iterable[Path],
 ) -> str:
     """Generate a package leaf directory with index and hashes
 
@@ -36,8 +40,13 @@ def generate(
                 digest = hexlify(sha256(open(dist, "rb").read()).digest())
                 with idx.a(
                     href=(
-                        str(Path("/") / (dist.relative_to(index_root)))
-                        + f"#sha256={digest.decode()}"
+                        str(
+                            urljoin(
+                                package_url,
+                                str(dist.relative_to(package_path))
+                                + f"#sha256={digest.decode()}",
+                            )
+                        )
                     )
                 ):
                     idx(dist.name)

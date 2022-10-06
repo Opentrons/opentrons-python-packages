@@ -59,5 +59,18 @@ def add_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         default="./index",
         help="Location for the generated simple index site",
     )
+    parser.add_argument(
+        "--index-root-url",
+        action="store",
+        default="http://localhost",
+        help="URL of the root of the index to write in URLs",
+    )
+    parser.add_argument(
+        "--build-type",
+        action="store",
+        choices=["packages-only", "index-only", "both"],
+        default="both",
+        help="Just build packages; just build index from previous package build; do both",
+    )
 
     return parser

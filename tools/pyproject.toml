@@ -32,6 +32,7 @@ _formatcheck = 'black --check ./builder ./tests'
 _flake8 = 'pflake8 ./builder ./tests'
 _typecheck = 'mypy ./builder ./tests'
 lint = ['_formatcheck', '_flake8', '_typecheck']
+serve = 'python -m http.server --directory=../index'
 
 [tool.poetry.dependencies]
 python = "^3.10"

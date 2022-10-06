@@ -141,7 +141,7 @@ def build_package(
     unpacked = unpack_source(
         unpack_dir,
         download_dir / source.archive_name(),
-        getattr(source, "package_source_path") or Path("."),
+        getattr(source, "package_source_path", None) or Path("."),
         context=context.context,
     )
     context.context.write(f"Unpacked to {str(unpacked)}")

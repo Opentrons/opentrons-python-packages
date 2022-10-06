@@ -6,8 +6,8 @@ TEST_DATA_DIR = Path(__file__).parent / "test_data"
 
 
 @pytest.fixture
-def run_path(tempfile: str) -> Path:
-    return Path(tempfile)
+def run_path(tmpdir: str) -> Path:
+    return Path(tmpdir)
 
 
 @pytest.fixture
@@ -27,9 +27,9 @@ def downloaded_artifacts() -> list[Path]:
 
 @pytest.fixture
 def downloaded_source_zip() -> Path:
-    return TEST_DATA_DIR / "download" / "pandas-v1.5.0.zip"
+    return TEST_DATA_DIR / "download" / "some-test-zip.zip"
 
 
 @pytest.fixture
 def downloaded_sdist_tar() -> Path:
-    return TEST_DATA_DIR / "download" / "numpy-1.23.3.tar.gz"
+    return TEST_DATA_DIR / "download" / "some-test-tar.tar.gz"

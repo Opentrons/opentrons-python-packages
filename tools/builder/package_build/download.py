@@ -96,9 +96,7 @@ def _unpack_member_to(
         return None
     destpath = path / Path(verified.name).relative_to(from_archive_path)
     context.write_verbose(f"unpack: {path} -> {destpath}")
-    # extract the member, which should be safe because we've passed this through
-    # _verify_tar_member
-    tf.extract(verified, destpath, set_attrs=True)
+    tf.extract(verified, path, set_attrs=True)
     return destpath
 
 

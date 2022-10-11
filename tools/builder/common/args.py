@@ -41,5 +41,36 @@ def add_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         action="store_true",
         help="Prepare the container and exit before running the package build.",
     )
+    parser.add_argument(
+        "--dist-tree-root",
+        action="store",
+        default="./dist",
+        help="Location for the tree of package distributables",
+    )
+    parser.add_argument(
+        "--build-tree-root",
+        action="store",
+        default="./build",
+        help="Location for the tree of package build areas",
+    )
+    parser.add_argument(
+        "--index-tree-root",
+        action="store",
+        default="./index",
+        help="Location for the generated simple index site",
+    )
+    parser.add_argument(
+        "--index-root-url",
+        action="store",
+        default="http://localhost",
+        help="URL of the root of the index to write in URLs",
+    )
+    parser.add_argument(
+        "--build-type",
+        action="store",
+        choices=["packages-only", "index-only", "both"],
+        default="both",
+        help="Just build packages; just build index from previous package build; do both",
+    )
 
     return parser

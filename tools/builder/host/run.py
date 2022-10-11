@@ -3,9 +3,10 @@ import argparse
 import os
 import sys
 
-from typing import List
+from typing import List, NoReturn
 
 import builder.common.args
+from builder.common.shellcommand import ShellCommandFailed
 import builder
 
 from .containers import run_container, prep_container
@@ -15,7 +16,7 @@ ROOT_PATH = os.path.realpath(
 )
 
 
-def run_from_cmdline() -> None:
+def run_from_cmdline() -> NoReturn:
     """
     Run as the main function from commandline.
 
@@ -27,13 +28,26 @@ def run_from_cmdline() -> None:
     args = parser.parse_args()
     try:
         run_build(sys.argv, args)
+    except ShellCommandFailed as scf:
+        # Special handling for shell commands that fail: mostly they're not going to
+        # be interesting especially if they're from the package build
+        if "docker run" in scf.command or not args.verbose:
+            print(f"{scf.message}", file=args.output)
+        else:
+            print(str(scf), file=args.output)
+        if "docker run" in scf.command:
+            sys.exit(1)
+        else:
+            sys.exit(2)
     except Exception as exc:
         if args.verbose:
             import traceback
 
-            print("\n".join(traceback.format_exception(exc)), file=args.output)
+            print("".join(traceback.format_exception(exc)), file=args.output)
         else:
             print(f"Build failed: {str(exc)}", file=args.output)
+        sys.exit(2)
+    sys.exit(0)
 
 
 def run_build(argv: List[str], parsed_args: argparse.Namespace) -> None:
@@ -68,9 +82,7 @@ def run_build(argv: List[str], parsed_args: argparse.Namespace) -> None:
     )
     if parsed_args.prep_container_only:
         return
-    run_container(
-        container_str, argv[1:], ROOT_PATH, parsed_args.output, parsed_args.verbose
-    )
+    run_container(container_str, argv[1:], ROOT_PATH, parsed_args.output, True)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:

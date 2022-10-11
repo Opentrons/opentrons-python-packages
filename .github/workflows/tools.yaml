@@ -4,6 +4,7 @@ on:
     paths:
       - "tools/**/*"
       - ".github/workflows/tools.yaml"
+      - "build-packages"
     branches:
       - "*"
     tags:
@@ -51,7 +52,7 @@ jobs:
       - name: 'Build the container'
         id: container-build
         run: |
-          ./build --prep-container-only --container-source=build
+          ./build-packages --prep-container-only --container-source=build --verbose
       - name: "Deploy the container to :main"
         id: container-deploy-main
         if: ${{github.ref == 'refs/heads/main'}}
@@ -78,3 +79,20 @@ jobs:
           docker images
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u --password-stdin
           docker image push --all-tags ghcr.io/opentrons/python-package-builder
+  package_build_check:
+    runs-on: 'ubuntu-latest'
+    name: 'Check package build'
+    needs: [python_check]
+    steps:
+      - uses: 'actions/checkout@v3'
+      - uses: 'actions/setup-python@v4'
+        with:
+          python-version: '3.10'
+      - name: 'Run the build'
+        run: |
+          ./build-packages --container-source=build --verbose
+      - name: 'Upload artifacts to temporary storage'
+        uses: 'actions/upload-artifact@v3'
+        with:
+          name: "opentrons-python-packages"
+          path: "dist/**/*"

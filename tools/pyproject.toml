@@ -10,6 +10,10 @@ packages = [{include = "builder"}]
 run-build='builder.host:run_from_cmdline'
 run-build-internal='builder.container:run_from_cmdline'
 
+[tool.poetry.group.dev.dependencies]
+beautifulsoup4 = "^4.11.1"
+types-beautifulsoup4 = "^4.11.6"
+
 [tool.poetry-dynamic-versioning]
 enable=false
 vcs="git"
@@ -22,15 +26,19 @@ style="semver"
 pattern="^tools@v((?P<epoch>\\d+)!)?(?P<base>\\d+(\\.\\d+)*)([-._]?((?P<stage>[a-zA-Z]+)[-._]?(?P<revision>\\d+)?))?(\\+(?P<tagged_metadata>.+))?$"
 
 [tool.poe.tasks]
-format = 'black .'
+format = 'black ./builder ./tests'
 test = 'py.test ./tests'
 _formatcheck = 'black --check ./builder ./tests'
 _flake8 = 'pflake8 ./builder ./tests'
 _typecheck = 'mypy ./builder ./tests'
 lint = ['_formatcheck', '_flake8', '_typecheck']
+serve = 'python -m http.server --directory=../index'
 
 [tool.poetry.dependencies]
 python = "^3.10"
+requests = "^2.28.1"
+airium = "^0.2.4"
+pkginfo = "^1.8.3"
 
 [tool.poetry.dev-dependencies]
 black="~=22.8.0"
@@ -39,6 +47,7 @@ flake8="~=5.0.4"
 pyproject-flake8= "~=5.0.4"
 flake8-noqa = "~=1.2.9"
 pytest = "~=7.1.3"
+types-requests = "^2.28.11"
 
 [tool.mypy]
 show_error_codes = true
@@ -49,7 +58,7 @@ warn_return_any = true
 
 [tool.flake8]
 max-complexity = 9
-extend-ignore = ["E203","E501", "ANN101", "ANN102"]
+extend-ignore = ["E203","E501", "ANN101", "ANN102", "E302", "E251", "E305", "E125", "E231", "E127", "E261", "W391"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]

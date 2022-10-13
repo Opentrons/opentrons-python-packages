@@ -46,14 +46,14 @@ jobs:
       url: ${{jobs.build-packages.outputs.target-url}}
     steps:
       - name: fetch artifacts
-          uses: actions/download-artifact@v3
-          with:
-            name: 'opentrons-python-packages'
-            path: './dist'
+        uses: actions/download-artifact@v3
+        with:
+          name: 'opentrons-python-packages'
+          path: './dist'
       - name: Configure AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v1
-          with:
-            role-to-assume: ${{ secrets.ASSUME_ROLE }}
-            aws-region: ${{ secrets.AWS_REGION }}
-        - name: upload web contents
-          run: aws s3 sync ./index s3://${{secrets.AWS_S3_BUCKET}}/${{github.ref_name}}
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.ASSUME_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: upload web contents
+        run: aws s3 sync ./index s3://${{secrets.AWS_S3_BUCKET}}/${{github.ref_name}}

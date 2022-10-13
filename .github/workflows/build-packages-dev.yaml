@@ -30,7 +30,7 @@ jobs:
       - name: 'Run the build'
         id: package-build
         run: |
-          ./build-packages --container-source=pull --container-tag=main --verbose --index-root-url=${{environment.url}}/${{github.ref_name}}
+          ./build-packages --container-source=pull --container-tag=main --verbose --index-root-url=${{steps.set-url.outputs.target-url}}/${{github.ref_name}}
       - name: Upload artifacts to temporary storage
         uses: actions/upload-artifact@v3
         with:

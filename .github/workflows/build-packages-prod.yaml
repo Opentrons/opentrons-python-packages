@@ -42,7 +42,7 @@ jobs:
     needs: build-packages
     environment:
       name: prod
-      url: https://pypi.opentrons.com
+      url: ${{needs.build-packages.outputs.target-url}}
     steps:
       - name: fetch artifacts
         uses: actions/download-artifact@v3

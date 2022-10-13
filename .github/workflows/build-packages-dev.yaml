@@ -43,7 +43,7 @@ jobs:
     needs: build-packages
     environment:
       name: dev
-      url: ${{jobs.build-packages.outputs.target-url}}
+      url: ${{needs.build-packages.outputs.target-url}}
     steps:
       - name: fetch artifacts
         uses: actions/download-artifact@v3

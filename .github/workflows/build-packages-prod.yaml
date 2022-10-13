@@ -52,7 +52,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.ASSUME_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: arn:aws:iam::879285218407:role/githubuser_role-prod
+          aws-region: us-east-1
       - name: upload web contents
-        run: aws s3 sync ./index s3://${{secrets.AWS_S3_BUCKET}}
+        run: aws s3 sync ./index s3://pypi.opentrons.com

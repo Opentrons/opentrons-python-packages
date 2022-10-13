@@ -1,0 +1,46 @@
+on:
+  push:
+    branches_ignore:
+      - "main"
+    paths:
+      - "packages/**/*"
+      - ".github/workflows/build-packages-dev.yaml"
+    tags_ignore:
+      - "*"
+    workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-packages:
+    runs-on: 'ubuntu-latest'
+    name: 'run build'
+    environment:
+      name: dev
+      url: https://dev.pypi.opentrons.com
+    steps:
+      - uses: 'actions/checkout@v3'
+      - uses: 'actions/setup-python@v4'
+        with:
+          python-version: '3.10'
+      - name: 'Run the build'
+        id: package-build
+        run: |
+          # CHANGEME: this should use :main once main is functional
+          # CHANGEME: this should specify a url for deployment when deployment is added
+          ./build-packages --container-source=pull --container-tag=dev --verbose --index-root-url=${{environment.url}}/${{github.ref_name}}
+      - name: Upload artifacts to temporary storage
+        uses: actions/upload-artifact@v3
+        with:
+          name: opentrons-python-packages
+          path: dist/**/*
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.ASSUME_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: upload web contents
+        run: aws s3 sync ./index s3://${{secrets.AWS_S3_BUCKET}}/${github.ref_name}

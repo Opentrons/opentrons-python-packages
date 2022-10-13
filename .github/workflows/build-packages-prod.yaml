@@ -17,10 +17,11 @@ jobs:
   build-packages:
     runs-on: 'ubuntu-latest'
     name: 'run build'
-    environment:
-      name: prod
-      url: https://pypi.opentrons.com
+    outputs:
+      target-url: steps.set-url.outputs.target-url
     steps:
+      - id: set-url
+        run: echo "::set-output name=target-url::http://pypi.opentrons.com"
       - uses: 'actions/checkout@v3'
       - uses: 'actions/setup-python@v4'
         with:
@@ -28,13 +29,26 @@ jobs:
       - name: 'Run the build'
         id: package-build
         run: |
-          ./build-packages --container-source=pull --container-tag=main --verbose --index-root-url=${{environment.url}}
+          ./build-packages --container-source=pull --container-tag=main --verbose --index-root-url=${{steps.set-url.outputs.target-url}}
       - name: Upload artifacts to temporary storage
         uses: actions/upload-artifact@v3
         with:
           name: opentrons-python-packages
           path: dist/**/*
 
+  deploy-to-prod:
+    runs-on: 'ubuntu-latest'
+    name: 'deploy to production'
+    needs: build-packages
+    environment:
+      name: prod
+      url: https://pypi.opentrons.com
+    steps:
+      - name: fetch artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: 'opentrons-python-packages'
+          path: './dist'
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

@@ -30,7 +30,6 @@ def test_generate(
 ) -> None:
     index = package_leaf.generate(
         "http://localhost/simple/pyudev/",
-        index_path,
         index_pyudev_package_dir,
         index_pyudev_distributions,
     )

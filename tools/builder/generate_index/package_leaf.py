@@ -10,7 +10,6 @@ from airium import Airium  # type: ignore[import]
 
 def generate(
     package_url: str,
-    index_root: Path,
     package_path: Path,
     distributions: Iterable[Path],
 ) -> str:
@@ -18,9 +17,8 @@ def generate(
 
     Params
     ------
-    root: the path to the actual root of index, i.e. what gets served at /
-    package_directory: the path to the package directory
-    package_name: the canonical name of the package
+    package_url: the url that locates the package directory
+    package_path: the path to the package directory
     distributions: iterable of the files to serve for the package. these paths should be true
                    filesystem paths (we need to read the files to get their hex digests) and
                    should be in the package directory.

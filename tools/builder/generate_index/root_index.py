@@ -7,16 +7,18 @@ from airium import Airium  # type: ignore[import]
 
 
 def generate(
-    index_root_url: str, index_root_path: Path, package_dirs: Iterable[Path]
+    simple_root_url: str, simple_root_path: Path, package_dirs: Iterable[Path]
 ) -> str:
     """Generate a PEP503 compliant simple index root html file.
 
     Params
     ------
-    index_root_url: the url of the index's simple api
-    index_root_path: the path to the actual root of the index, i.e. what gets served at /
-    package_directory: the path to the package directory
-    package_name: the canonical name of the package
+    simple_root_url: the url of the index's simple api, e.g. pypi.opentrons.com/simple
+    simple_root_path: the path to the actual root of the simple index, i.e. what gets served
+                     at the simple_root_url, i.e. /path/to/opentrons-python-packages/index/simple
+    package_directory: the path to the package directory, i.e.
+                     /path/to/opentrons-python-packages/index/simple/package
+    package_name: the canonical name of the package, i.e. pandas for pandas
     distributions: iterable of the files to serve for the package. these paths should be true
                    filesystem paths (we need to read the files to get their hex digests) and
                    should be in the package directory.
@@ -36,7 +38,7 @@ def generate(
                 with idx.a(
                     href=str(
                         urljoin(
-                            index_root_url, str(package.relative_to(index_root_path))
+                            simple_root_url, str(package.relative_to(simple_root_path))
                         )
                     )
                 ):

@@ -83,16 +83,46 @@ jobs:
     runs-on: 'ubuntu-latest'
     name: 'Check package build'
     needs: [python_check]
+    outputs:
+      target-url: steps.set-url.outputs.target-url
     steps:
+      - id: set-url
+        run: |
+          echo "::set-output name=target-url::https://dev.pypi.opentrons.com"
       - uses: 'actions/checkout@v3'
       - uses: 'actions/setup-python@v4'
         with:
           python-version: '3.10'
       - name: 'Run the build'
         run: |
-          ./build-packages --container-source=build --verbose
+          ./build-packages --container-source=build --verbose --index-root-url=${{steps.set-url.outputs.target-url}}/${{github.ref_name}}
       - name: 'Upload artifacts to temporary storage'
         uses: 'actions/upload-artifact@v3'
         with:
-          name: "opentrons-python-packages"
+          name: "package-dist"
           path: "dist/**/*"
+      - name: "Upload index to temporary storage"
+        uses: 'actions/upload-artifact@v3'
+        with:
+          name: 'package-index'
+          path: index/**/*
+  deploy-to-dev:
+    runs-on: 'ubuntu-latest'
+    name: 'deploy to dev'
+    needs: package_build_check
+    environment:
+      name: dev
+      url: ${{needs.package_build_check.outputs.target-url}}
+    steps:
+      - name: fetch artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: 'package-index'
+          path: './index'
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::699250785121:role/githubuser_role-dev
+          aws-region: us-east-1
+      - name: upload web contents
+        run: aws s3 sync ./index s3://dev.pypi.opentrons.com/${{github.ref_name}}

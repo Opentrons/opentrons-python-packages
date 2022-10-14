@@ -48,7 +48,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: 'opentrons-python-packages'
-          path: './dist'
+          path: './opentrons-python-packages/dist'
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

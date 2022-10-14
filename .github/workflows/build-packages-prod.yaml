@@ -30,11 +30,16 @@ jobs:
         id: package-build
         run: |
           ./build-packages --container-source=pull --container-tag=main --verbose --index-root-url=${{steps.set-url.outputs.target-url}}
-      - name: Upload artifacts to temporary storage
+      - name: Upload packages to temporary storage
         uses: actions/upload-artifact@v3
         with:
-          name: opentrons-python-packages
+          name: package-dist
           path: dist/**/*
+      - name: Upload index to temporary storage
+        uses: actions/upload-artifact@v3
+        with:
+          name: package-index
+          path: index/**/*
 
   deploy-to-prod:
     runs-on: 'ubuntu-latest'
@@ -47,8 +52,8 @@ jobs:
       - name: fetch artifacts
         uses: actions/download-artifact@v3
         with:
-          name: 'opentrons-python-packages'
-          path: './opentrons-python-packages/dist'
+          name: 'package-index'
+          path: './index'
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

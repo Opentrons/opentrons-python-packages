@@ -110,6 +110,9 @@ jobs:
     runs-on: 'ubuntu-latest'
     name: 'deploy to dev'
     needs: package_build_check
+    permissions:
+      id-token: write
+      contents: read
     environment:
       name: dev
       url: ${{needs.package_build_check.outputs.target-url}}

@@ -8,7 +8,7 @@ ENV PATH=$PATH:/build-environment/poetry/bin
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true
 ENV HOME=/build-environment
 
-RUN apt update && apt install -y curl wget file git
+RUN apt update && apt install -y curl wget file git libpcsclite-dev swig
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 RUN mkdir /build-environment
 

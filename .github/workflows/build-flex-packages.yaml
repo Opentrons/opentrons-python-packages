@@ -1,0 +1,32 @@
+name: Build pyscard whl for Flex
+
+on:
+  push:
+    branches:
+      - flex-build
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+  
+        - name: Clone pyscard repository
+          run: |
+            mkdir -p flex/pyscard-src
+            git clone --depth=1 https://github.com/LudovicRousseau/pyscard.git flex/pyscard-src
+  
+        - name: Create output directory
+          run: mkdir -p flex/output
+  
+        - name: Build Docker Image and Export whl
+          working-directory: flex
+          run: |
+            docker buildx build --platform linux/arm64 -t pyscard-arm64 --output type=local,dest=output .
+
+        - name: Upload whl Artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: pyscard-whl
+            path: flex/output/app/dist/*.whl

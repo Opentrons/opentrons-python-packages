@@ -1,0 +1,20 @@
+# Use an ARM-specific Python 3.10 image (Debian Bullseye)
+FROM arm64v8/python:3.10-bullseye
+
+# Set working directory for clarity
+WORKDIR /app
+
+# Update apt and install the PC/SC development package (provides libpcsclite.so.1)
+# https://layers.openembedded.org/layerindex/recipe/1079/
+RUN apt-get update && \
+    apt-get install -y libpcsclite-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the built wheel(s) from the local 'output' directory into the container
+COPY output /wheels
+
+# Install the whl
+RUN pip install /wheels/*.whl
+
+# Set the container to run a test: import the module and print a success message
+CMD ["python", "-c", "import smartcard; print('pyscard imported successfully!')"]

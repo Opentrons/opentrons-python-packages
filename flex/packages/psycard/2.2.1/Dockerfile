@@ -1,6 +1,6 @@
 # Use the official Python 3.10 image for the target platform.
 # The --platform argument will be honored by Buildx.
-FROM --platform=$BUILDPLATFORM python:3.10-bullseye
+FROM --platform=$BUILDPLATFORM python:3.10-bullseye AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -25,12 +25,14 @@ ENV CXX=aarch64-linux-gnu-g++
 # Upgrade pip and install the build backend.
 RUN pip install --upgrade pip && pip install build
 
-# Set the working directory and copy the external pyscard source.
+
 WORKDIR /app
-COPY pyscard-src/ .
+# Clone the specific version of pyscard
+RUN git clone --depth 1 --branch 2.2.1 https://github.com/LudovicRousseau/pyscard.git .
 
 # Build the wheel; the output will be placed in /app/dist.
 RUN python -m build
 
-# Exit immediately after the build.
-CMD ["/bin/true"]
+# buildx will automatically detect the output directory
+FROM scratch AS exporter
+COPY --from=builder /app/dist/ /

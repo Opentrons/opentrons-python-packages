@@ -7,6 +7,59 @@ The OT-2 uses a custom Buildroot-created Linux system running on a Raspberry Pi.
 
 Any package identified here can be installed on an OT-2 through `pip`.
 
+## Quick Installation
+
+### Option 1: One-line installer
+```bash
+# Install pandas
+curl -sSL https://raw.githubusercontent.com/sgbaird/opentrons-python-packages/main/install.sh | bash -s -- pandas
+
+# Install prefect workflow framework (see OT2-PREFECT-INSTALLATION-GUIDE.md for full setup)
+curl -sSL https://raw.githubusercontent.com/sgbaird/opentrons-python-packages/main/install.sh | bash -s -- prefect
+
+# Install pendulum (date/time library, Prefect dependency)
+curl -sSL https://raw.githubusercontent.com/sgbaird/opentrons-python-packages/main/install.sh | bash -s -- pendulum
+```
+
+### Option 2: Manual download
+For immediate use, pre-built wheel files are available in the [wheels/](wheels/) directory:
+
+```bash
+# Install pandas directly from repository  
+curl -L https://raw.githubusercontent.com/sgbaird/opentrons-python-packages/main/wheels/pandas-1.5.0-cp310-cp310-linux_armv7l.whl -o /tmp/pandas.whl
+pip install /tmp/pandas.whl
+
+# Install prefect workflow framework (see OT2-PREFECT-INSTALLATION-GUIDE.md for complete setup)
+curl -L https://raw.githubusercontent.com/sgbaird/opentrons-python-packages/main/wheels/prefect-3.3.4-py3-none-any.whl -o /tmp/prefect.whl
+pip install /tmp/prefect.whl
+
+# Install pendulum (universal wheel for maximum compatibility)
+curl -L https://raw.githubusercontent.com/sgbaird/opentrons-python-packages/main/wheels/pendulum-3.1.0-py3-none-any.whl -o /tmp/pendulum.whl
+pip install /tmp/pendulum.whl
+```
+
+### Option 3: CI Artifacts
+Download wheel files from the latest [GitHub Actions artifacts](../../actions) or [releases](../../releases).
+
+## Special Installation: Prefect Workflow Framework
+
+For **Prefect** (workflow orchestration), use the complete installation guide as it requires specific environment configuration and dependency resolution:
+
+**Quick Installation:**
+```bash
+curl -L https://raw.githubusercontent.com/sgbaird/opentrons-python-packages/copilot/fix-11/ot2_prefect_installer.py -o installer.py
+python3 installer.py
+```
+
+**For full setup instructions, troubleshooting, and usage examples, see:**
+[OT2-PREFECT-INSTALLATION-GUIDE.md](OT2-PREFECT-INSTALLATION-GUIDE.md)
+
+This guide provides:
+- ✅ Complete environment configuration for OT-2
+- ✅ Pre-built ARM-compatible wheels 
+- ✅ Flow serving and cloud login capabilities
+- ✅ Troubleshooting for common issues
+
 ## Requesting Packages
 
 Please open an issue if there is a Python package that you want that is not present, or if there is a specific version of a Python package that the index does not have. Please also feel free to open a pull request to add it! Before requesting a package or new version, please try installing it on an OT-2 first; only packages with native code components need to be here, since pure-python packages are installable from PyPI.

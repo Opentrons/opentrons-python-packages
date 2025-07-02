@@ -112,6 +112,11 @@ class SDKSubshell:
         self._guarded_shellcall("export _python_prefix=/usr")
         self._guarded_shellcall("export _python_exec_prefix=/usr")
         self._guarded_shellcall("export PYTHONNOUSERSITE=1")
+        # Fix for pandas complex number compilation issue
+        # Add compiler flags to ensure proper complex number support for ARM cross-compilation
+        complex_flags = "-D_Complex_I=I -D_GNU_SOURCE -std=gnu99"
+        self._guarded_shellcall(f'export CFLAGS="$CFLAGS {complex_flags}"')
+        self._guarded_shellcall(f'export CPPFLAGS="$CPPFLAGS {complex_flags}"')
 
     def _shellcall(
         self,

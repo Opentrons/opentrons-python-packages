@@ -1,0 +1,148 @@
+name: Build and Commit Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force build even if no package changes'
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/**/*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-commit-wheels:
+    runs-on: 'ubuntu-latest'
+    name: 'Build packages and commit wheels to repository'
+    steps:
+      - uses: 'actions/checkout@v3'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - uses: 'actions/setup-python@v4'
+        with:
+          python-version: '3.10'
+      
+      - name: 'Build packages'
+        id: build
+        run: |
+          ./build-packages --container-source=pull --container-tag=main --verbose --build-type packages-only
+        continue-on-error: true
+      
+      - name: 'Copy wheels to repository'
+        if: steps.build.outcome == 'success'
+        run: |
+          # Clean existing wheels
+          rm -f wheels/*.whl
+          
+          # Copy new wheels
+          if [ -d "dist" ] && [ "$(find dist -name '*.whl' | wc -l)" -gt 0 ]; then
+            find dist -name "*.whl" -exec cp {} wheels/ \;
+            echo "Copied $(find wheels -name '*.whl' | wc -l) wheel files"
+            
+            # Update wheel list in README
+            echo "# Pre-built Python Wheels" > wheels/README.md
+            echo "" >> wheels/README.md
+            echo "This directory contains pre-built Python wheel files for arm7hf architecture that can be directly downloaded and installed on OT-2 systems." >> wheels/README.md
+            echo "" >> wheels/README.md
+            echo "## Quick Installation" >> wheels/README.md
+            echo "" >> wheels/README.md
+            echo "\`\`\`bash" >> wheels/README.md
+            for wheel in wheels/*.whl; do
+              if [ -f "$wheel" ]; then
+                wheel_name=$(basename "$wheel")
+                package_name=$(echo "$wheel_name" | cut -d'-' -f1)
+                echo "# Install $package_name" >> wheels/README.md
+                echo "curl -L https://raw.githubusercontent.com/sgbaird/opentrons-python-packages/main/wheels/$wheel_name -o /tmp/$wheel_name" >> wheels/README.md
+                echo "pip install /tmp/$wheel_name" >> wheels/README.md
+                echo "" >> wheels/README.md
+              fi
+            done
+            echo "\`\`\`" >> wheels/README.md
+            echo "" >> wheels/README.md
+            echo "## Available Packages" >> wheels/README.md
+            echo "" >> wheels/README.md
+            for wheel in wheels/*.whl; do
+              if [ -f "$wheel" ]; then
+                wheel_name=$(basename "$wheel")
+                echo "- \`$wheel_name\`" >> wheels/README.md
+              fi
+            done
+            echo "" >> wheels/README.md
+            echo "Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> wheels/README.md
+            echo "Built from commit: ${{ github.sha }}" >> wheels/README.md
+          else
+            echo "No wheel files found to copy"
+            exit 1
+          fi
+      
+      - name: 'Commit wheels to repository'
+        if: steps.build.outcome == 'success'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add wheels/
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update pre-built wheel files
+
+            Built from commit ${{ github.sha }}
+            
+            Wheels updated:
+            $(find wheels -name '*.whl' -exec basename {} \; | sed 's/^/- /')"
+            
+            git push
+            echo "Committed and pushed wheel files"
+          fi
+      
+      - name: 'Build failed - create issue'
+        if: steps.build.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const title = 'Wheel build failed for commit ${{ github.sha }}';
+            const body = `
+            The wheel build process failed for commit ${{ github.sha }}.
+            
+            Please check the build logs and fix any issues:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            This may be due to:
+            - Network connectivity issues
+            - Build environment problems  
+            - Package dependency issues
+            - Changes in package build requirements
+            `;
+            
+            // Check if issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['build-failure']
+            });
+            
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Wheel build failed')
+            );
+            
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['build-failure', 'automated']
+              });
+            }

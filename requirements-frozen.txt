@@ -1,0 +1,44 @@
+# Frozen requirements for Prefect on OT-2
+# These are the exact versions that were successfully installed
+# Generated from working OT-2 Prefect environment
+
+aiosqlite==0.21.0
+alembic==1.16.2
+annotated-types==0.7.0
+anyio==4.9.0
+certifi==2025.6.15
+cloudpickle==3.1.1
+coolname==2.2.0
+fastapi==0.115.13
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+humanize==4.12.3
+importlib-metadata==8.7.0
+jinja2==3.1.6
+jsonpatch==1.33
+jsonpointer==3.0.0
+pathspec==0.12.1
+pendulum==3.1.0
+prefect-client==3.4.6
+prefect==3.3.4
+pydantic-core==2.33.2
+pydantic-extra-types==2.10.5
+pydantic-settings==2.9.1
+pydantic==2.11.7
+python-slugify==8.0.4
+readchar==4.2.1
+requests==2.32.4
+rfc3339-validator==0.1.4
+rich==14.0.0
+ruamel.yaml==0.18.14
+sqlalchemy==2.0.41
+starlette==0.46.2
+toml==0.10.2
+tomli==2.2.1
+typer==0.16.0
+typing-extensions==4.12.2
+ujson==5.10.0
+urllib3==2.4.0
+websockets==15.0.1
+zipp==3.23.0

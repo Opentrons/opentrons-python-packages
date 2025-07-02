@@ -6,5 +6,5 @@ package_build.build_package(
         repo='pandas',
         tag='v1.5.0'),
     setup_py_commands=['build_ext', 'bdist_wheel'],
-    build_dependencies=['numpy', 'Cython']
+    build_dependencies=['numpy', 'Cython>=0.29.32,<3', 'setuptools>=51.0.0']
 )

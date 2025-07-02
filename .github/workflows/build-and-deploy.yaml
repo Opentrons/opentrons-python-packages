@@ -1,0 +1,176 @@
+name: Build and Deploy Packages
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "packages/**/*"
+      - ".github/workflows/build-and-deploy.yaml"
+    tags:
+      - "packages@v*"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  packages: read
+
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+    name: 'Build packages'
+    outputs:
+      artifacts-created: ${{ steps.build.outputs.artifacts-created }}
+    steps:
+      - uses: 'actions/checkout@v3'
+      - uses: 'actions/setup-python@v4'
+        with:
+          python-version: '3.10'
+      
+      - name: 'Build packages'
+        id: build
+        run: |
+          ./build-packages --container-source=pull --container-tag=main --verbose --build-type packages-only
+          echo "artifacts-created=true" >> $GITHUB_OUTPUT
+      
+      - name: 'Upload wheel artifacts'
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-wheels-${{ github.sha }}
+          path: dist/**/*.whl
+          retention-days: 90
+      
+      - name: 'Upload complete build artifacts'
+        uses: actions/upload-artifact@v4
+        with:
+          name: complete-build-${{ github.sha }}
+          path: |
+            dist/**/*
+            index/**/*
+          retention-days: 30
+      
+      - name: 'List built packages'
+        run: |
+          echo "Built packages:"
+          find dist -name "*.whl" -exec basename {} \; | sort
+          echo ""
+          echo "Download wheel artifacts from: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  create-release:
+    runs-on: 'ubuntu-latest'
+    name: 'Create release with wheels'
+    needs: build
+    if: github.ref == 'refs/heads/main' && needs.build.outputs.artifacts-created == 'true'
+    steps:
+      - uses: 'actions/checkout@v3'
+      
+      - name: 'Download wheel artifacts'
+        uses: actions/download-artifact@v4
+        with:
+          name: package-wheels-${{ github.sha }}
+          path: ./dist
+      
+      - name: 'Create release tag'
+        id: create_tag
+        run: |
+          TAG="wheels-$(date +%Y%m%d-%H%M%S)-${GITHUB_SHA:0:7}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          git tag $TAG
+          git push origin $TAG
+      
+      - name: 'Create release with wheel files'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.create_tag.outputs.tag }}
+          name: "Python Wheels ${{ steps.create_tag.outputs.tag }}"
+          body: |
+            Python wheel packages built from commit ${{ github.sha }}
+            
+            ## Installation
+            Download and install on OT-2 or compatible system:
+            ```bash
+            # Download specific packages
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ steps.create_tag.outputs.tag }}/[WHEEL_NAME].whl -o /tmp/[WHEEL_NAME].whl
+            pip install /tmp/[WHEEL_NAME].whl
+            ```
+            
+            ## Available packages in this release:
+            $(find dist -name "*.whl" -exec basename {} \; | sed 's/^/- /')
+          files: |
+            dist/*.whl
+          draft: false
+          prerelease: false
+
+  deploy-dev:
+    runs-on: 'ubuntu-latest'
+    name: 'Deploy to dev environment'
+    needs: build
+    if: github.ref != 'refs/heads/main' && needs.build.outputs.artifacts-created == 'true'
+    environment:
+      name: dev
+      url: https://dev.pypi.opentrons.com/${{ github.ref_name }}
+    steps:
+      - name: 'Download build artifacts'
+        uses: actions/download-artifact@v4
+        with:
+          name: complete-build-${{ github.sha }}
+          path: ./
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::699250785121:role/githubuser_role-dev
+          aws-region: us-east-1
+      
+      - name: 'Deploy to dev S3'
+        run: aws s3 sync ./index s3://dev.pypi.opentrons.com/${{ github.ref_name }}
+
+  deploy-staging:
+    runs-on: 'ubuntu-latest'
+    name: 'Deploy to staging'
+    needs: build
+    if: github.ref == 'refs/heads/main' && needs.build.outputs.artifacts-created == 'true'
+    environment:
+      name: staging
+      url: https://staging.pypi.opentrons.com
+    steps:
+      - name: 'Download build artifacts'
+        uses: actions/download-artifact@v4
+        with:
+          name: complete-build-${{ github.sha }}
+          path: ./
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::879285218407:role/githubuser_role-staging
+          aws-region: us-east-1
+      
+      - name: 'Deploy to staging S3'
+        run: aws s3 sync ./index s3://staging.pypi.opentrons.com
+
+  deploy-prod:
+    runs-on: 'ubuntu-latest'
+    name: 'Deploy to production'
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/packages@v') && needs.build.outputs.artifacts-created == 'true'
+    environment:
+      name: prod
+      url: https://pypi.opentrons.com
+    steps:
+      - name: 'Download build artifacts'
+        uses: actions/download-artifact@v4
+        with:
+          name: complete-build-${{ github.sha }}
+          path: ./
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::879285218407:role/githubuser_role-prod
+          aws-region: us-east-1
+      
+      - name: 'Deploy to production S3'
+        run: aws s3 sync ./index s3://pypi.opentrons.com

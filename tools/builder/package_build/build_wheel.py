@@ -40,15 +40,17 @@ def args_for_command(
 def update_build_dependencies(deps: list[str]) -> Iterator[str]:
     """some build dependencies need alteration to actually match what buildroot does."""
     for dep in deps:
-        if dep == "numpy":
+        if dep.startswith("numpy"):
             # if the package requests numpy as a _build_ dependency, it is
             # probably because the package has cythonized components and uses the numpy
-            # c api. the numpy c api changed in 1.20:
-            # https://github.com/numpy/numpy/pull/16938
-            # this is backwards-compatible in that code compiled on numpy 1.16 will work on
-            # numpy 1.20, but not in the sense that code compiled on numpy 1.20 will work
-            # on previous versions. so use the older version.
-            yield "numpy==1.16.6"
+            # c api. For pandas 1.5.0 and newer packages, we need a more recent numpy
+            # version that provides proper C API compatibility while still maintaining
+            # backward compatibility for the target platform.
+            yield "numpy>=1.19.0,<1.25"
+        elif dep.startswith("Cython") and "=" not in dep:
+            # If Cython is requested without version constraints, add reasonable defaults
+            # for cross-compilation compatibility
+            yield "Cython>=0.29.32,<3"
         else:
             yield dep
 
